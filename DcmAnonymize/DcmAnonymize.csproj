@@ -6,17 +6,30 @@
         <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
         <PackAsTool>true</PackAsTool>
-        <ToolCommandName>dcmorganize</ToolCommandName>
+        <ToolCommandName>DcmAnonymize</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
         <Version>1.0.0</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/amoerie/dcmorganize</RepositoryUrl>
+        <RepositoryUrl>https://github.com/amoerie/DcmAnonymize</RepositoryUrl>
         <Authors>Alexander Moerman</Authors>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
       <PackageReference Include="fo-dicom.NetCore" Version="4.0.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Names\first-names.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Names\last-names.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="PersonName" />
     </ItemGroup>
 
 </Project>

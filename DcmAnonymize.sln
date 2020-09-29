@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DcmOrganize", "DcmOrganize\DcmOrganize.csproj", "{740B25E3-71A9-40C3-ADDD-B7CDE0C10FA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DcmAnonymize", "DcmAnonymize\DcmAnonymize.csproj", "{740B25E3-71A9-40C3-ADDD-B7CDE0C10FA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DcmOrganize.Tests", "DcmOrganize.Tests\DcmOrganize.Tests.csproj", "{E8C3724B-3129-4B2F-B81B-ED0987FE6FB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DcmAnonymize.Tests", "DcmAnonymize.Tests\DcmAnonymize.Tests.csproj", "{E8C3724B-3129-4B2F-B81B-ED0987FE6FB0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D9A50DAD-8EAF-41F2-9DDC-9D9C6B5D4BD8}"
 ProjectSection(SolutionItems) = preProject

@@ -1,2 +1,2 @@
-dotnet pack ./DcmOrganize/DcmOrganize.csproj --configuration Release
+dotnet pack ./DcmAnonymize/DcmAnonymize.csproj --configuration Release
 pause
