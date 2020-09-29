@@ -15,7 +15,7 @@ namespace DcmAnonymize
         // ReSharper disable ClassNeverInstantiated.Global
         public class Options
         {
-            [Value(0, HelpText = "Organize these DICOM files. When missing, this option will be read from the piped input.", Required = false)]
+            [Value(0, HelpText = "Anonymize these DICOM files. When missing, this option will be read from the piped input.", Required = false)]
             public IEnumerable<string>? Files { get; set; }
         }
         // ReSharper restore UnusedAutoPropertyAccessor.Global
