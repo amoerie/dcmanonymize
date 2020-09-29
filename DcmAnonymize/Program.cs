@@ -47,7 +47,8 @@ namespace DcmAnonymize
                 string? file;
                 while ((file = Console.ReadLine()) != null)
                 {
-                    yield return file;
+                    if(file != null && File.Exists(file))
+                        yield return file;
                 }            
             }
 

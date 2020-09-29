@@ -8,7 +8,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>DcmAnonymize</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
-        <Version>1.0.0</Version>
+        <Version>1.0.3</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/amoerie/DcmAnonymize</RepositoryUrl>
         <Authors>Alexander Moerman</Authors>
@@ -20,16 +20,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Names\first-names.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Names\last-names.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+      <Folder Include="PersonName" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="PersonName" />
+      <None Remove="Names\first-names.txt" />
+      <EmbeddedResource Include="Names\first-names.txt" />
+      <None Remove="Names\last-names.txt" />
+      <EmbeddedResource Include="Names\last-names.txt" />
     </ItemGroup>
 
 </Project>
