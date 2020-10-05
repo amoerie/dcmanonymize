@@ -1,14 +1,16 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using DcmAnonymize.Names;
 using Dicom;
+using KeyedSemaphores;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Study
 {
     public class StudyAnonymizer
     {
         private readonly RandomNameGenerator _randomNameGenerator;
-        private readonly IDictionary<string, AnonymizedStudy> _anonymizedStudies = new Dictionary<string, AnonymizedStudy>();
+        private readonly ConcurrentDictionary<string, AnonymizedStudy> _anonymizedStudies = new ConcurrentDictionary<string, AnonymizedStudy>();
         private readonly Random _random = new Random();
         private int _counter = 1;
 
@@ -17,23 +19,30 @@ namespace DcmAnonymize
             _randomNameGenerator = randomNameGenerator ?? throw new ArgumentNullException(nameof(randomNameGenerator));
         }
 
-        public void Anonymize(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
         {
             var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
             var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
     
             if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out var anonymizedStudy))
             {
-                anonymizedStudy = new AnonymizedStudy();
+                var key = $"STUDY_{originalStudyInstanceUID}";
+                using (await KeyedSemaphore.LockAsync(key))
+                {
+                    if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out anonymizedStudy))
+                    {
+                        anonymizedStudy = new AnonymizedStudy();
 
-                anonymizedStudy.StudyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
-                anonymizedStudy.Description = "A wonderful study";
-                anonymizedStudy.AccessionNumber = $"{originalModality}{DateTime.Today:yyyyMMdd}{_counter++}";
-                anonymizedStudy.StudyRequestingPhysician = _randomNameGenerator.GenerateRandomName();
-                anonymizedStudy.StudyDateTime = DateTime.Now;
-                anonymizedStudy.StudyID = anonymizedStudy.AccessionNumber;
+                        anonymizedStudy.StudyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                        anonymizedStudy.Description = "A wonderful study";
+                        anonymizedStudy.AccessionNumber = $"{originalModality}{DateTime.Today:yyyyMMdd}{_counter++}";
+                        anonymizedStudy.StudyRequestingPhysician = _randomNameGenerator.GenerateRandomName();
+                        anonymizedStudy.StudyDateTime = DateTime.Now;
+                        anonymizedStudy.StudyID = anonymizedStudy.AccessionNumber;
 
-                _anonymizedStudies[originalStudyInstanceUID] = anonymizedStudy;
+                        _anonymizedStudies[originalStudyInstanceUID] = anonymizedStudy;
+                    }
+                }
             }
 
             dicomDataSet.AddOrUpdate(DicomTag.StudyInstanceUID, anonymizedStudy.StudyInstanceUID);

@@ -1,15 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using DcmAnonymize.Names;
 using Dicom;
+using KeyedSemaphores;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Patient
 {
     public class PatientAnonymizer
     {
         private readonly RandomNameGenerator _randomNameGenerator;
-        private readonly IDictionary<string, AnonymizedPatient> _anonymizedPatients = new Dictionary<string, AnonymizedPatient>();
+        private readonly ConcurrentDictionary<string, AnonymizedPatient> _anonymizedPatients = new ConcurrentDictionary<string, AnonymizedPatient>();
         private readonly Random _random = new Random();
         private int _counter = 1;
 
@@ -18,20 +19,27 @@ namespace DcmAnonymize
             _randomNameGenerator = randomNameGenerator ?? throw new ArgumentNullException(nameof(randomNameGenerator));
         }
 
-        public void Anonymize(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
         {
             var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName);
     
             if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))
             {
-                anonymizedPatient = new AnonymizedPatient();
+                var key = $"PATIENT_{originalPatientName}";
+                using (await KeyedSemaphore.LockAsync(key))
+                {
+                    if (!_anonymizedPatients.TryGetValue(originalPatientName, out anonymizedPatient))
+                    {
+                        anonymizedPatient = new AnonymizedPatient();
 
-                anonymizedPatient.Name = _randomNameGenerator.GenerateRandomName();
-                anonymizedPatient.BirthDate = GenerateRandomBirthdate();
-                anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMdd}{_counter++}";
-                anonymizedPatient.NationalNumber = GenerateRandomNationalNumber(anonymizedPatient.BirthDate);
+                        anonymizedPatient.Name = _randomNameGenerator.GenerateRandomName();
+                        anonymizedPatient.BirthDate = GenerateRandomBirthdate();
+                        anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMdd}{_counter++}";
+                        anonymizedPatient.NationalNumber = GenerateRandomNationalNumber(anonymizedPatient.BirthDate);
 
-                _anonymizedPatients[originalPatientName] = anonymizedPatient;
+                        _anonymizedPatients[originalPatientName] = anonymizedPatient;
+                    }
+                }
             }
 
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));

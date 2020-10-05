@@ -7,8 +7,7 @@
         <Nullable>enable</Nullable>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>DcmAnonymize</ToolCommandName>
-        <PackageOutputPath>./nupkg</PackageOutputPath>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/amoerie/DcmAnonymize</RepositoryUrl>
         <Authors>Alexander Moerman</Authors>
@@ -17,6 +16,7 @@
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
       <PackageReference Include="fo-dicom.NetCore" Version="4.0.6" />
+      <PackageReference Include="KeyedSemaphores" Version="0.1.2" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,4 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using DcmAnonymize.Patient;
+using DcmAnonymize.Series;
+using DcmAnonymize.Study;
 using Dicom;
 
 namespace DcmAnonymize
@@ -19,12 +23,12 @@ namespace DcmAnonymize
             _instanceAnonymizer = instanceAnonymizer ?? throw new ArgumentNullException(nameof(instanceAnonymizer));
         }
 
-        public void Anonymize(DicomDataset dicomDataset)
+        public async Task AnonymizeAsync(DicomDataset dicomDataset)
         {
-            _patientAnonymizer.Anonymize(dicomDataset);
-            _studyAnonymizer.Anonymize(dicomDataset);
-            _seriesAnonymizer.Anonymize(dicomDataset);
-            _instanceAnonymizer.Anonymize(dicomDataset);
+            await _patientAnonymizer.AnonymizeAsync(dicomDataset);
+            await _studyAnonymizer.AnonymizeAsync(dicomDataset);
+            await _seriesAnonymizer.AnonymizeAsync(dicomDataset);
+            await _instanceAnonymizer.AnonymizeAsync(dicomDataset);
         }
     }
 }

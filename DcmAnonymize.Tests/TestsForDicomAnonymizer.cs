@@ -1,4 +1,7 @@
 using DcmAnonymize.Names;
+using DcmAnonymize.Patient;
+using DcmAnonymize.Series;
+using DcmAnonymize.Study;
 using Dicom;
 using FluentAssertions;
 using Xunit;
@@ -32,7 +35,7 @@ namespace DcmAnonymize.Tests
             };
             
             // Act
-            _anonymizer.Anonymize(dicomDataSet);
+            _anonymizer.AnonymizeAsync(dicomDataSet);
             
             // Assert
             dicomDataSet.Contains(DicomTag.PatientName).Should().BeTrue();
@@ -62,8 +65,8 @@ namespace DcmAnonymize.Tests
             };
             
             // Act
-            _anonymizer.Anonymize(dicomDataSet1);
-            _anonymizer.Anonymize(dicomDataSet2);
+            _anonymizer.AnonymizeAsync(dicomDataSet1);
+            _anonymizer.AnonymizeAsync(dicomDataSet2);
             
             // Assert
             var patientName1 = dicomDataSet1.GetSingleValue<string>(DicomTag.PatientName);
@@ -93,8 +96,8 @@ namespace DcmAnonymize.Tests
             };
             
             // Act
-            _anonymizer.Anonymize(dicomDataSet1);
-            _anonymizer.Anonymize(dicomDataSet2);
+            _anonymizer.AnonymizeAsync(dicomDataSet1);
+            _anonymizer.AnonymizeAsync(dicomDataSet2);
             
             // Assert
             var studyInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.StudyInstanceUID);
@@ -124,8 +127,8 @@ namespace DcmAnonymize.Tests
             };
             
             // Act
-            _anonymizer.Anonymize(dicomDataSet1);
-            _anonymizer.Anonymize(dicomDataSet2);
+            _anonymizer.AnonymizeAsync(dicomDataSet1);
+            _anonymizer.AnonymizeAsync(dicomDataSet2);
             
             // Assert
             var seriesInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.SeriesInstanceUID);

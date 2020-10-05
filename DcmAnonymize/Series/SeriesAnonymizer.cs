@@ -1,26 +1,35 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using DcmAnonymize.Names;
+using System.Threading.Tasks;
 using Dicom;
+using KeyedSemaphores;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Series
 {
     public class SeriesAnonymizer
     {
-        private readonly IDictionary<string, AnonymizedSeries> _anonymizedStudies = new Dictionary<string, AnonymizedSeries>();
+        private readonly ConcurrentDictionary<string, AnonymizedSeries> _anonymizedStudies = new ConcurrentDictionary<string, AnonymizedSeries>();
 
-        public void Anonymize(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
         {
             var originalSeriesInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
     
             if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out var anonymizedSeries))
             {
-                anonymizedSeries = new AnonymizedSeries();
+                var key = $"SERIES_{originalSeriesInstanceUID}";
+                using (await KeyedSemaphore.LockAsync(key))
+                {
+                    if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out anonymizedSeries))
+                    {
+                        anonymizedSeries = new AnonymizedSeries();
 
-                anonymizedSeries.SeriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
-                anonymizedSeries.SeriesDateTime = DateTime.Now;
+                        anonymizedSeries.SeriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                        anonymizedSeries.SeriesDateTime = DateTime.Now;
 
-                _anonymizedStudies[originalSeriesInstanceUID] = anonymizedSeries;
+                        _anonymizedStudies[originalSeriesInstanceUID] = anonymizedSeries;
+                    }
+                }
             }
 
             dicomDataSet.AddOrUpdate(DicomTag.SeriesInstanceUID, anonymizedSeries.SeriesInstanceUID);
