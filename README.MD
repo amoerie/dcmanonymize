@@ -1,4 +1,4 @@
-DICOM ANONYMIZE
+🕵️‍ DICOM ANONYMIZE
 ---------------
 
 Anonymizes DICOM files on your disk.
