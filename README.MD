@@ -15,10 +15,23 @@ Installation
 Usage
 -----
 
+```powershell
+    dcmanonymize file1.dcm file2.dcm file3.dcm
+```
+
+or using piped input
+
+```powershell
+    dcmfind | dcmanonymize
+```
+
+
 Options 
 
 ```
   files pos. 0               Required. (Default: .) Anonymize these DICOM files. When missing, this option will be read from the piped input.
+
+  -p, --parallelism          (Default: 8) Process this many files in parallel
   
   --help                     Display this help screen.
 
