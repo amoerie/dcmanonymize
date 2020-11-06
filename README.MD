@@ -5,6 +5,16 @@
 
 Anonymizes DICOM files on your disk.
 
+Installation
+------------
+
+```
+    dotnet tool install dcmanonymize --global
+```
+
+Usage
+-----
+
 Options 
 
 ```
