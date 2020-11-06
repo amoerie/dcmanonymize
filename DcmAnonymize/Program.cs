@@ -25,6 +25,8 @@ namespace DcmAnonymize
 
             [Option('p', "parallelism", Default = 8, HelpText = "Process this many files in parallel")]
             public int Parallelism { get; set; }
+            
+
         }
         // ReSharper restore UnusedAutoPropertyAccessor.Global
         // ReSharper restore MemberCanBePrivate.Global
