@@ -25,6 +25,8 @@ or using piped input
     dcmfind | dcmanonymize
 ```
 
+See https://github.com/amoerie/dcmfind
+
 
 Options 
 
