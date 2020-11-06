@@ -39,6 +39,7 @@ namespace DcmAnonymize.Study
                         anonymizedStudy.AccessionNumber = $"{originalModality}{DateTime.Today:yyyyMMdd}{_counter++}";
                         anonymizedStudy.StudyRequestingPhysician = _randomNameGenerator.GenerateRandomName();
                         anonymizedStudy.StudyDateTime = DateTime.Now;
+
                         anonymizedStudy.StudyID = anonymizedStudy.AccessionNumber;
                         anonymizedStudy.InstitutionName = "Random Hospital " + _random.Next(1, 100);
                         anonymizedStudy.StudyPerformingPhysician = _randomNameGenerator.GenerateRandomName();
@@ -60,6 +61,11 @@ namespace DcmAnonymize.Study
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.NameOfPhysiciansReadingStudy, anonymizedStudy.StudyPerformingPhysician.LastName, anonymizedStudy.StudyPerformingPhysician.FirstName));
             
             dicomDataSet.AddOrUpdate(DicomTag.StudyDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd"));
+
+            var patientDOB = dicomDataSet.GetSingleValue<DateTime>(DicomTag.PatientBirthDate);
+            var age = Math.Floor((anonymizedStudy.StudyDateTime - patientDOB).TotalDays / 365);
+            dicomDataSet.AddOrUpdate(DicomTag.PatientAge, $"{age.ToString("000")}Y");
+
             dicomDataSet.AddOrUpdate(DicomTag.StudyTime, anonymizedStudy.StudyDateTime.ToString("HHmmss"));
             dicomDataSet.AddOrUpdate(DicomTag.StudyID, anonymizedStudy.StudyID);
             dicomDataSet.AddOrUpdate(DicomTag.SourceApplicationEntityTitle, "DobcoAnoSCU");

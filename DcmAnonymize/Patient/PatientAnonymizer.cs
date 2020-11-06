@@ -46,8 +46,7 @@ namespace DcmAnonymize.Patient
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
             dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate);
 
-            var age = Math.Floor((DateTime.Today - anonymizedPatient.BirthDate).TotalDays / 365);
-            dicomDataSet.AddOrUpdate(DicomTag.PatientAge, $"{age.ToString("000")}Y");
+
             dicomDataSet.Remove(DicomTag.PatientAddress);
             dicomDataSet.Remove(DicomTag.MilitaryRank);
             dicomDataSet.Remove(DicomTag.PatientTelephoneNumbers);
