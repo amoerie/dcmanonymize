@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
 using Dicom;
@@ -21,7 +22,7 @@ namespace DcmAnonymize.Patient
 
         public async Task AnonymizeAsync(DicomDataset dicomDataSet)
         {
-            var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName);
+            var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
     
             if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))
             {
@@ -44,6 +45,15 @@ namespace DcmAnonymize.Patient
 
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
             dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate);
+
+            var age = Math.Floor((DateTime.Today - anonymizedPatient.BirthDate).TotalDays / 365);
+            dicomDataSet.AddOrUpdate(DicomTag.PatientAge, $"{age.ToString("000")}Y");
+            dicomDataSet.Remove(DicomTag.PatientAddress);
+            dicomDataSet.Remove(DicomTag.MilitaryRank);
+            dicomDataSet.Remove(DicomTag.PatientTelephoneNumbers);
+
+            
+             
             dicomDataSet.AddOrUpdate(DicomTag.OtherPatientIDsRETIRED, anonymizedPatient.NationalNumber);
             dicomDataSet.AddOrUpdate(new DicomSequence(DicomTag.OtherPatientIDsSequence, new DicomDataset
             {

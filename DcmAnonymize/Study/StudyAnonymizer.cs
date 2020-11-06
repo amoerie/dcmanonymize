@@ -17,6 +17,7 @@ namespace DcmAnonymize.Study
         public StudyAnonymizer(RandomNameGenerator randomNameGenerator)
         {
             _randomNameGenerator = randomNameGenerator ?? throw new ArgumentNullException(nameof(randomNameGenerator));
+            _random = new Random();
         }
 
         public async Task AnonymizeAsync(DicomDataset dicomDataSet)
@@ -39,14 +40,15 @@ namespace DcmAnonymize.Study
                         anonymizedStudy.StudyRequestingPhysician = _randomNameGenerator.GenerateRandomName();
                         anonymizedStudy.StudyDateTime = DateTime.Now;
                         anonymizedStudy.StudyID = anonymizedStudy.AccessionNumber;
-
+                        anonymizedStudy.InstitutionName = "Random Hospital " + _random.Next(1, 100);
+                        anonymizedStudy.StudyPerformingPhysician = _randomNameGenerator.GenerateRandomName();
                         _anonymizedStudies[originalStudyInstanceUID] = anonymizedStudy;
                     }
                 }
             }
 
             dicomDataSet.AddOrUpdate(DicomTag.StudyInstanceUID, anonymizedStudy.StudyInstanceUID);
-            dicomDataSet.AddOrUpdate(DicomTag.StudyDescription, anonymizedStudy.Description);
+            
             dicomDataSet.AddOrUpdate(DicomTag.AccessionNumber, anonymizedStudy.AccessionNumber);
             dicomDataSet.AddOrUpdate(new DicomPersonName(
                 DicomTag.RequestingPhysician, 
@@ -54,9 +56,27 @@ namespace DcmAnonymize.Study
                 anonymizedStudy.StudyRequestingPhysician.FirstName
                 )
             );
+            dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PerformingPhysicianName, anonymizedStudy.StudyPerformingPhysician.LastName, anonymizedStudy.StudyPerformingPhysician.FirstName));
+            dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.NameOfPhysiciansReadingStudy, anonymizedStudy.StudyPerformingPhysician.LastName, anonymizedStudy.StudyPerformingPhysician.FirstName));
+            
             dicomDataSet.AddOrUpdate(DicomTag.StudyDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd"));
             dicomDataSet.AddOrUpdate(DicomTag.StudyTime, anonymizedStudy.StudyDateTime.ToString("HHmmss"));
             dicomDataSet.AddOrUpdate(DicomTag.StudyID, anonymizedStudy.StudyID);
+            dicomDataSet.AddOrUpdate(DicomTag.SourceApplicationEntityTitle, "DobcoAnoSCU");
+
+            //AdditionalTags
+            
+            dicomDataSet.AddOrUpdate(DicomTag.InstitutionName, anonymizedStudy.InstitutionName);
+            dicomDataSet.Remove(DicomTag.InstitutionAddress);
+            dicomDataSet.AddOrUpdate(new DicomPersonName(
+    DicomTag.ReferringPhysicianName,
+    anonymizedStudy.StudyRequestingPhysician.LastName,
+    anonymizedStudy.StudyRequestingPhysician.FirstName
+    )         
+);
+            dicomDataSet.Remove(DicomTag.PhysiciansOfRecord);
+
+
         }
     }
 }
