@@ -34,6 +34,7 @@ namespace DcmAnonymize.Tests
                 { DicomTag.SeriesInstanceUID, "1.1" },
                 { DicomTag.SOPInstanceUID, "1.1.1" },
             };
+            dicomDataSet.Validate();
             
             // Act
             _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);

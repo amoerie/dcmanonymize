@@ -54,12 +54,12 @@ namespace DcmAnonymize.Patient
                 new DicomDataset {
                     { DicomTag.PatientID, anonymizedPatient.PatientId },
                     { DicomTag.IssuerOfPatientID, "DcmAnonymize" },
-                    { DicomTag.TypeOfPatientID, "PatientId" }
+                    { DicomTag.TypeOfPatientID, "PATIENTID" }
                 },
                 new DicomDataset {
                     { DicomTag.PatientID, anonymizedPatient.NationalNumber },
                     { DicomTag.IssuerOfPatientID, "DcmAnonymize" },
-                    { DicomTag.TypeOfPatientID, "NationalNumber" }
+                    { DicomTag.TypeOfPatientID, "NATIONALNUMBER" }
                 }
             ));
         }
