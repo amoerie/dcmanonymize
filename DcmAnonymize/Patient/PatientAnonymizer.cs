@@ -35,7 +35,7 @@ namespace DcmAnonymize.Patient
 
                         anonymizedPatient.Name = _randomNameGenerator.GenerateRandomName();
                         anonymizedPatient.BirthDate = GenerateRandomBirthdate();
-                        anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMdd}{_counter++}";
+                        anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMddHHmm}{_counter++}";
                         anonymizedPatient.NationalNumber = GenerateRandomNationalNumber(anonymizedPatient.BirthDate);
 
                         _anonymizedPatients[originalPatientName] = anonymizedPatient;
