@@ -11,7 +11,7 @@ namespace DcmAnonymize.Series
     {
         private readonly ConcurrentDictionary<string, AnonymizedSeries> _anonymizedStudies = new ConcurrentDictionary<string, AnonymizedSeries>();
 
-        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
         {
             var originalSeriesInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
     

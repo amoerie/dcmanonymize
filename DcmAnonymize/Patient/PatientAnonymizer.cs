@@ -20,7 +20,7 @@ namespace DcmAnonymize.Patient
             _randomNameGenerator = randomNameGenerator ?? throw new ArgumentNullException(nameof(randomNameGenerator));
         }
 
-        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
         {
             var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
     

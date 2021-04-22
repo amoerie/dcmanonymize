@@ -127,7 +127,7 @@ namespace DcmAnonymize
 
             try
             {
-                await anonymizer.AnonymizeAsync(dicomFile.Dataset);
+                await anonymizer.AnonymizeAsync(dicomFile.FileMetaInfo, dicomFile.Dataset);
             }
             catch (Exception e)
             {

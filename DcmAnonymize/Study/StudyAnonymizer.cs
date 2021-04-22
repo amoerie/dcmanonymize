@@ -20,7 +20,7 @@ namespace DcmAnonymize.Study
             _random = new Random();
         }
 
-        public async Task AnonymizeAsync(DicomDataset dicomDataSet)
+        public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
         {
             var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
             var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
@@ -36,7 +36,7 @@ namespace DcmAnonymize.Study
 
                         anonymizedStudy.StudyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
                         anonymizedStudy.Description = "A wonderful study";
-                        anonymizedStudy.AccessionNumber = $"{originalModality}{DateTime.Today:yyyyMMdd}{_counter++}";
+                        anonymizedStudy.AccessionNumber = $"{originalModality}{DateTime.Today:yyyyMMddHHmm}{_counter++}";
                         anonymizedStudy.StudyRequestingPhysician = _randomNameGenerator.GenerateRandomName();
                         anonymizedStudy.StudyDateTime = DateTime.Now;
 

@@ -23,12 +23,12 @@ namespace DcmAnonymize
             _instanceAnonymizer = instanceAnonymizer ?? throw new ArgumentNullException(nameof(instanceAnonymizer));
         }
 
-        public async Task AnonymizeAsync(DicomDataset dicomDataset)
+        public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataset)
         {
-            await _patientAnonymizer.AnonymizeAsync(dicomDataset);
-            await _studyAnonymizer.AnonymizeAsync(dicomDataset);
-            await _seriesAnonymizer.AnonymizeAsync(dicomDataset);
-            await _instanceAnonymizer.AnonymizeAsync(dicomDataset);
+            await _patientAnonymizer.AnonymizeAsync(metaInfo, dicomDataset);
+            await _studyAnonymizer.AnonymizeAsync(metaInfo, dicomDataset);
+            await _seriesAnonymizer.AnonymizeAsync(metaInfo, dicomDataset);
+            await _instanceAnonymizer.AnonymizeAsync(metaInfo, dicomDataset);
         }
     }
 }
