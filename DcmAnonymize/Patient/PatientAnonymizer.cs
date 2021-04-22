@@ -45,14 +45,23 @@ namespace DcmAnonymize.Patient
 
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
             dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate);
+            dicomDataSet.AddOrUpdate(DicomTag.PatientID, anonymizedPatient.PatientId);
             dicomDataSet.Remove(DicomTag.PatientAddress);
             dicomDataSet.Remove(DicomTag.MilitaryRank);
             dicomDataSet.Remove(DicomTag.PatientTelephoneNumbers);
             dicomDataSet.AddOrUpdate(DicomTag.OtherPatientIDsRETIRED, anonymizedPatient.NationalNumber);
-            dicomDataSet.AddOrUpdate(new DicomSequence(DicomTag.OtherPatientIDsSequence, new DicomDataset
-            {
-                { DicomTag.PatientID, anonymizedPatient.NationalNumber }
-            }));
+            dicomDataSet.AddOrUpdate(new DicomSequence(DicomTag.OtherPatientIDsSequence, 
+                new DicomDataset {
+                    { DicomTag.PatientID, anonymizedPatient.PatientId },
+                    { DicomTag.IssuerOfPatientID, "DcmAnonymize" },
+                    { DicomTag.TypeOfPatientID, "PatientId" }
+                },
+                new DicomDataset {
+                    { DicomTag.PatientID, anonymizedPatient.NationalNumber },
+                    { DicomTag.IssuerOfPatientID, "DcmAnonymize" },
+                    { DicomTag.TypeOfPatientID, "NationalNumber" }
+                }
+            ));
         }
         
         private DateTime GenerateRandomBirthdate()
