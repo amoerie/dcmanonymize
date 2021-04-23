@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
 using Dicom;
@@ -57,20 +58,37 @@ namespace DcmAnonymize.Study
                     anonymizedStudy.StudyRequestingPhysician.FirstName
                 )
             );
-            dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PerformingPhysicianName, anonymizedStudy.StudyPerformingPhysician.LastName,
-                anonymizedStudy.StudyPerformingPhysician.FirstName));
-            dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.NameOfPhysiciansReadingStudy, anonymizedStudy.StudyPerformingPhysician.LastName,
-                anonymizedStudy.StudyPerformingPhysician.FirstName));
+            dicomDataSet.AddOrUpdate(new DicomPersonName(
+                    DicomTag.PerformingPhysicianName,
+                    anonymizedStudy.StudyPerformingPhysician.LastName,
+                    anonymizedStudy.StudyPerformingPhysician.FirstName
+                )
+            );
+            dicomDataSet.AddOrUpdate(new DicomPersonName(
+                DicomTag.NameOfPhysiciansReadingStudy, 
+                anonymizedStudy.StudyPerformingPhysician.LastName,
+                anonymizedStudy.StudyPerformingPhysician.FirstName
+                )
+            );
 
-            dicomDataSet.AddOrUpdate(DicomTag.StudyDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd"));
+            dicomDataSet.AddOrUpdate(DicomTag.StudyDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+            dicomDataSet.AddOrUpdate(DicomTag.AcquisitionDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+            dicomDataSet.AddOrUpdate(DicomTag.ContentDate, anonymizedStudy.StudyDateTime.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
 
-            var patientDOB = dicomDataSet.GetSingleValue<DateTime>(DicomTag.PatientBirthDate);
-            var age = Math.Floor((anonymizedStudy.StudyDateTime - patientDOB).TotalDays / 365);
-            dicomDataSet.AddOrUpdate(DicomTag.PatientAge, $"{age.ToString("000")}Y");
+            // Assuming the PatientAnonymizer made a pass first, we can be sure to have a patient DOB
+            var patientBirthDate = dicomDataSet.GetSingleValue<DateTime>(DicomTag.PatientBirthDate);
+            var studyDate = anonymizedStudy.StudyDateTime.Date;
+            var patientAge = studyDate.Year - patientBirthDate.Year;
+            if (patientBirthDate.Date > studyDate.AddYears(-patientAge))
+            {
+                patientAge--;
+            }
+            dicomDataSet.AddOrUpdate(DicomTag.PatientAge, $"{patientAge.ToString("000", CultureInfo.InvariantCulture)}Y");
 
-            dicomDataSet.AddOrUpdate(DicomTag.StudyTime, anonymizedStudy.StudyDateTime.ToString("HHmmss"));
+            dicomDataSet.AddOrUpdate(DicomTag.StudyTime, anonymizedStudy.StudyDateTime.ToString("HHmmss", CultureInfo.InvariantCulture));
+            dicomDataSet.AddOrUpdate(DicomTag.AcquisitionTime, anonymizedStudy.StudyDateTime.ToString("HHmmss", CultureInfo.InvariantCulture));
+            dicomDataSet.AddOrUpdate(DicomTag.ContentTime, anonymizedStudy.StudyDateTime.ToString("HHmmss", CultureInfo.InvariantCulture));
             dicomDataSet.AddOrUpdate(DicomTag.StudyID, anonymizedStudy.StudyID);
-            dicomDataSet.AddOrUpdate(DicomTag.SourceApplicationEntityTitle, "DobcoAnoSCU");
 
             //AdditionalTags
 

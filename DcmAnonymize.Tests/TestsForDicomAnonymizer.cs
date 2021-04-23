@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;
@@ -144,6 +146,32 @@ namespace DcmAnonymize.Tests
             seriesInstanceUID1.Should().NotBe("1");
             seriesInstanceUID2.Should().NotBe("1");
             seriesInstanceUID1.Should().Be(seriesInstanceUID2);
+        }
+        
+        [Fact]
+        public void ShouldBeAbleToAnonymizeSampleDicomFile()
+        {
+            // Arrange
+            var sampleFileCopy = $"./SampleDicomFileCopy-{Guid.NewGuid()}.dcm";
+            File.Copy("./SampleDicomFile.dcm", sampleFileCopy);
+            try
+            {
+                var sampleDicomFile = DicomFile.Open(sampleFileCopy);
+                var metaInfo = sampleDicomFile.FileMetaInfo;
+                var dicomDataSet = sampleDicomFile.Dataset;
+                
+                dicomDataSet.Validate();
+
+                // Act
+                _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
+
+                // Assert
+                dicomDataSet.Validate();
+            }
+            finally
+            {
+                File.Delete(sampleFileCopy);
+            }
         }
     }
 }

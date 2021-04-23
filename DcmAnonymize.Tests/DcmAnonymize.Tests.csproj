@@ -18,4 +18,10 @@
       <ProjectReference Include="..\DcmAnonymize\DcmAnonymize.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="SampleDicomFile.DCM">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

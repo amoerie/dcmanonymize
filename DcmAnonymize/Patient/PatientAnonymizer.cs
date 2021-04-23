@@ -44,7 +44,7 @@ namespace DcmAnonymize.Patient
             }
 
             dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
-            dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate);
+            dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate.ToString("yyyyMMdd"));
             dicomDataSet.AddOrUpdate(DicomTag.PatientID, anonymizedPatient.PatientId);
             dicomDataSet.Remove(DicomTag.PatientAddress);
             dicomDataSet.Remove(DicomTag.MilitaryRank);
@@ -62,10 +62,14 @@ namespace DcmAnonymize.Patient
                     { DicomTag.TypeOfPatientID, "NATIONALNUMBER" }
                 }
             ));
+            dicomDataSet.AddOrUpdate(DicomTag.PatientIdentityRemoved, "YES");
+            dicomDataSet.AddOrUpdate(DicomTag.DeidentificationMethod, $"DcmAnonymize {typeof(DicomAnonymizer).Assembly.GetName().Version}");
+            dicomDataSet.Remove(DicomTag.DeidentificationMethodCodeSequence);
         }
         
         private DateTime GenerateRandomBirthdate()
         {
+            // A random age between 18 and 80
             var ageInDays = TimeSpan.FromDays(_random.Next(18 * 365, 80 * 365));
             return DateTime.Today.Add(-ageInDays);
         }

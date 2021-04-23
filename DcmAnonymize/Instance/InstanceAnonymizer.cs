@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Dicom;
 
@@ -10,8 +12,11 @@ namespace DcmAnonymize
             var newSopInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID();
 
             metaInfo.MediaStorageSOPInstanceUID = newSopInstanceUID;
+            metaInfo.SourceApplicationEntityTitle = "DcmAnonymize";
             
             dicomDataSet.AddOrUpdate(DicomTag.SOPInstanceUID, newSopInstanceUID.UID);
+            dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationDate, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+            dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationTime, DateTime.Now.ToString("HHmmss", CultureInfo.InvariantCulture));
         }
     }
 }
