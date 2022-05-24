@@ -14,7 +14,5 @@ jobs:
         env:
           NUGET_URL: https://api.nuget.org/v3/index.json
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-          GITHUB_URL: https://nuget.pkg.github.com/amoerie/index.json
-          GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
         run: ./publish.ps1
         shell: pwsh
