@@ -36,6 +36,7 @@ namespace DcmAnonymize.Series
             dicomDataSet.AddOrUpdate(DicomTag.SeriesInstanceUID, anonymizedSeries.SeriesInstanceUID);
             dicomDataSet.AddOrUpdate(DicomTag.SeriesDate, anonymizedSeries.SeriesDateTime.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
             dicomDataSet.AddOrUpdate(DicomTag.SeriesTime, anonymizedSeries.SeriesDateTime.ToString("HHmmss", CultureInfo.InvariantCulture));
+            dicomDataSet.Remove(DicomTag.RelatedSeriesSequence);
         }
     }
 }
