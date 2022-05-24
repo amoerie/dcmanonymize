@@ -74,8 +74,9 @@ namespace DcmAnonymize
                 : ReadFilesFromConsole();
             var parallelism = options.Parallelism;
             var randomNameGenerator = new RandomNameGenerator();
+            var nationalNumberGenerator = new NationalNumberGenerator();
             var anonymizer = new DicomAnonymizer(
-                new PatientAnonymizer(randomNameGenerator),
+                new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator),
                 new StudyAnonymizer(randomNameGenerator),
                 new SeriesAnonymizer(),
                 new InstanceAnonymizer()

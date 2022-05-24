@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;
@@ -17,15 +18,16 @@ namespace DcmAnonymize.Tests
         public TestsForDicomAnonymizer()
         {
             var randomNameGenerator = new RandomNameGenerator();
+            var nationalNumberGenerator = new NationalNumberGenerator();
             _anonymizer = new DicomAnonymizer(
-                new PatientAnonymizer(randomNameGenerator), 
+                new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator), 
                 new StudyAnonymizer(randomNameGenerator),
                 new SeriesAnonymizer(), 
                 new InstanceAnonymizer());
         }
         
         [Fact]
-        public void ShouldBeAbleToAnonymizeEmptyDataSet()
+        public async Task ShouldBeAbleToAnonymizeEmptyDataSet()
         {
             // Arrange
             var metaInfo = new DicomFileMetaInformation();
@@ -39,7 +41,7 @@ namespace DcmAnonymize.Tests
             dicomDataSet.Validate();
             
             // Act
-            _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
+            await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
             
             // Assert
             dicomDataSet.Contains(DicomTag.PatientName).Should().BeTrue();
@@ -50,7 +52,7 @@ namespace DcmAnonymize.Tests
         }
         
         [Fact]
-        public void ShouldAnonymizeSamePatient()
+        public async Task ShouldAnonymizeSamePatient()
         {
             // Arrange
             var dicomDataSet1 = new DicomDataset
@@ -71,8 +73,8 @@ namespace DcmAnonymize.Tests
             var metaInfo2 = new DicomFileMetaInformation();
             
             // Act
-            _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
-            _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
+            await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
+            await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
             
             // Assert
             var patientName1 = dicomDataSet1.GetSingleValue<string>(DicomTag.PatientName);
@@ -83,7 +85,7 @@ namespace DcmAnonymize.Tests
         }
         
         [Fact]
-        public void ShouldAnonymizeSameStudy()
+        public async Task ShouldAnonymizeSameStudy()
         {
             // Arrange
             var dicomDataSet1 = new DicomDataset
@@ -104,8 +106,8 @@ namespace DcmAnonymize.Tests
             var metaInfo2 = new DicomFileMetaInformation();
             
             // Act
-            _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
-            _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
+            await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
+            await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
             
             // Assert
             var studyInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.StudyInstanceUID);
@@ -116,7 +118,7 @@ namespace DcmAnonymize.Tests
         }
         
         [Fact]
-        public void ShouldAnonymizeSameSeries()
+        public async Task ShouldAnonymizeSameSeries()
         {
             // Arrange
             var dicomDataSet1 = new DicomDataset
@@ -137,8 +139,8 @@ namespace DcmAnonymize.Tests
             var metaInfo2 = new DicomFileMetaInformation();
             
             // Act
-            _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
-            _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
+            await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
+            await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
             
             // Assert
             var seriesInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
@@ -149,21 +151,21 @@ namespace DcmAnonymize.Tests
         }
         
         [Fact]
-        public void ShouldBeAbleToAnonymizeSampleDicomFile()
+        public async Task ShouldBeAbleToAnonymizeSampleDicomFile()
         {
             // Arrange
             var sampleFileCopy = $"./SampleDicomFileCopy-{Guid.NewGuid()}.dcm";
             File.Copy("./SampleDicomFile.dcm", sampleFileCopy);
             try
             {
-                var sampleDicomFile = DicomFile.Open(sampleFileCopy);
+                var sampleDicomFile = await DicomFile.OpenAsync(sampleFileCopy);
                 var metaInfo = sampleDicomFile.FileMetaInfo;
                 var dicomDataSet = sampleDicomFile.Dataset;
                 
                 dicomDataSet.Validate();
 
                 // Act
-                _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
+                await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
 
                 // Assert
                 dicomDataSet.Validate();

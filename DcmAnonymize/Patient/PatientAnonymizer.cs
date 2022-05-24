@@ -11,13 +11,15 @@ namespace DcmAnonymize.Patient
     public class PatientAnonymizer
     {
         private readonly RandomNameGenerator _randomNameGenerator;
+        private readonly NationalNumberGenerator _nationalNumberGenerator;
         private readonly ConcurrentDictionary<string, AnonymizedPatient> _anonymizedPatients = new ConcurrentDictionary<string, AnonymizedPatient>();
         private readonly Random _random = new Random();
         private int _counter = 1;
 
-        public PatientAnonymizer(RandomNameGenerator randomNameGenerator)
+        public PatientAnonymizer(RandomNameGenerator randomNameGenerator, NationalNumberGenerator nationalNumberGenerator)
         {
             _randomNameGenerator = randomNameGenerator ?? throw new ArgumentNullException(nameof(randomNameGenerator));
+            _nationalNumberGenerator = nationalNumberGenerator ?? throw new ArgumentNullException(nameof(nationalNumberGenerator));
         }
 
         public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
@@ -36,7 +38,22 @@ namespace DcmAnonymize.Patient
                         anonymizedPatient.Name = _randomNameGenerator.GenerateRandomName();
                         anonymizedPatient.BirthDate = GenerateRandomBirthdate();
                         anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMddHHmm}{_counter++}";
-                        anonymizedPatient.NationalNumber = GenerateRandomNationalNumber(anonymizedPatient.BirthDate);
+                        if (dicomDataSet.TryGetString(DicomTag.PatientSex, out string patientSex))
+                        {
+                            switch (patientSex.ToUpperInvariant())
+                            {
+                                case "m":
+                                    anonymizedPatient.Sex = PatientSex.Male;
+                                    break;
+                                case "f":
+                                    anonymizedPatient.Sex = PatientSex.Female;
+                                    break;
+                                case "o":
+                                    anonymizedPatient.Sex = PatientSex.Other;
+                                    break;
+                            }
+                        }
+                        anonymizedPatient.NationalNumber = _nationalNumberGenerator.GenerateRandomNationalNumber(anonymizedPatient.BirthDate, anonymizedPatient.Sex);
 
                         _anonymizedPatients[originalPatientName] = anonymizedPatient;
                     }
@@ -75,16 +92,5 @@ namespace DcmAnonymize.Patient
             return DateTime.Today.Add(-ageInDays);
         }
         
-        private string GenerateRandomNationalNumber(DateTime birthDate)
-        {
-            var year = birthDate.Year.ToString("0000").Substring(2, 2);
-            var month = birthDate.Month.ToString("00");
-            var day = birthDate.Day.ToString("00");
-            var index = _random.Next(0, 999).ToString("000");
-            var number = long.Parse($"{year}{month}{day}{index}");
-            var checkSum = (number % 97).ToString("00");
-
-            return $"{number}{checkSum}";
-        }
     }
 }

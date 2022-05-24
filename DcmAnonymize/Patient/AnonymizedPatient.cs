@@ -10,5 +10,14 @@ namespace DcmAnonymize
         public string NationalNumber { get; set; }
         public DateTime BirthDate { get; set; }
         public string PatientId { get; set; }
+
+        public PatientSex? Sex { get; set; }
+    }
+
+    public enum PatientSex
+    {
+        Male,
+        Female,
+        Other
     }
 }
