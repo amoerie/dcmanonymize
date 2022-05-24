@@ -101,6 +101,8 @@ namespace DcmAnonymize.Study
                 )
             );
             dicomDataSet.Remove(DicomTag.PhysiciansOfRecord);
+            dicomDataSet.Remove(DicomTag.ReferencedStudySequence);
+
         }
     }
 }
