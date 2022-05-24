@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
-using Dicom;
+using FellowOakDicom;
 using KeyedSemaphores;
 
 namespace DcmAnonymize.Patient

@@ -1,6 +1,6 @@
 using System;
 using DcmAnonymize.Names;
-using Dicom;
+using FellowOakDicom;
 
 namespace DcmAnonymize
 {

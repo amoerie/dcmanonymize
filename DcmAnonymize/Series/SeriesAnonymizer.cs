@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
-using Dicom;
+using FellowOakDicom;
 using KeyedSemaphores;
 
 namespace DcmAnonymize.Series

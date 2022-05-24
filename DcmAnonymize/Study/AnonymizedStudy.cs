@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 using DcmAnonymize.Names;
-using Dicom;
+using FellowOakDicom;
 
 namespace DcmAnonymize
 {

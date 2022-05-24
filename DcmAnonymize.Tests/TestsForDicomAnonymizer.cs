@@ -5,7 +5,7 @@ using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;
-using Dicom;
+using FellowOakDicom;
 using FluentAssertions;
 using Xunit;
 
