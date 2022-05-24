@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using DcmAnonymize.Instance;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;

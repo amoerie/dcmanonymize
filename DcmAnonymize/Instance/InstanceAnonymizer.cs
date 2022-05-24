@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Threading.Tasks;
 using FellowOakDicom;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Instance
 {
     public class InstanceAnonymizer
     {
-        public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+        public Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
         {
             var newSopInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID();
 
@@ -17,6 +17,8 @@ namespace DcmAnonymize
             dicomDataSet.AddOrUpdate(DicomTag.SOPInstanceUID, newSopInstanceUID.UID);
             dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationDate, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
             dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationTime, DateTime.Now.ToString("HHmmss", CultureInfo.InvariantCulture));
+
+            return Task.CompletedTask;
         }
     }
 }

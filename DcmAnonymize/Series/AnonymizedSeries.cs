@@ -1,10 +1,6 @@
 using System;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Series
 {
-    public class AnonymizedSeries
-    {
-        public string SeriesInstanceUID { get; set; }
-        public DateTime SeriesDateTime { get; set; }
-    }
+    public record AnonymizedSeries(string SeriesInstanceUID, DateTime SeriesDateTime);
 }

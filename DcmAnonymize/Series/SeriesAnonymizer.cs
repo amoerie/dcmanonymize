@@ -23,11 +23,11 @@ namespace DcmAnonymize.Series
                 {
                     if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out anonymizedSeries))
                     {
-                        anonymizedSeries = new AnonymizedSeries();
+                        var seriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                        var seriesDateTime = DateTime.Now;
 
-                        anonymizedSeries.SeriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
-                        anonymizedSeries.SeriesDateTime = DateTime.Now;
-
+                        anonymizedSeries = new AnonymizedSeries(seriesInstanceUID, seriesDateTime);
+                        
                         _anonymizedStudies[originalSeriesInstanceUID] = anonymizedSeries;
                     }
                 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommandLine;
+using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;

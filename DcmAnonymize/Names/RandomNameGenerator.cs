@@ -21,7 +21,7 @@ namespace DcmAnonymize.Names
             var firstName = firstNames[_random.Next(0, firstNames.Length - 1)];
             var lastName = lastNames[_random.Next(0, lastNames.Length - 1)];
 
-            return new RandomName {FirstName = firstName, LastName = lastName};
+            return new RandomName(firstName, lastName);
         }
 
         private static IEnumerable<string> ReadEmbeddedResource(string resourceName)

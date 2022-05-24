@@ -33,28 +33,29 @@ namespace DcmAnonymize.Patient
                 {
                     if (!_anonymizedPatients.TryGetValue(originalPatientName, out anonymizedPatient))
                     {
-                        anonymizedPatient = new AnonymizedPatient();
-
-                        anonymizedPatient.Name = _randomNameGenerator.GenerateRandomName();
-                        anonymizedPatient.BirthDate = GenerateRandomBirthdate();
-                        anonymizedPatient.PatientId = $"PAT{DateTime.Now:yyyyMMddHHmm}{_counter++}";
-                        if (dicomDataSet.TryGetString(DicomTag.PatientSex, out string patientSex))
+                        var name = _randomNameGenerator.GenerateRandomName();
+                        var birthDate = GenerateRandomBirthdate();
+                        var patientId = $"PAT{DateTime.Now:yyyyMMddHHmm}{_counter++}";
+                        PatientSex? sex = null;
+                        if (dicomDataSet.TryGetString(DicomTag.PatientSex, out string parsedPatientSex))
                         {
-                            switch (patientSex.ToUpperInvariant())
+                            switch (parsedPatientSex.ToUpperInvariant())
                             {
                                 case "m":
-                                    anonymizedPatient.Sex = PatientSex.Male;
+                                    sex = PatientSex.Male;
                                     break;
                                 case "f":
-                                    anonymizedPatient.Sex = PatientSex.Female;
+                                    sex = PatientSex.Female;
                                     break;
                                 case "o":
-                                    anonymizedPatient.Sex = PatientSex.Other;
+                                    sex = PatientSex.Other;
                                     break;
                             }
                         }
-                        anonymizedPatient.NationalNumber = _nationalNumberGenerator.GenerateRandomNationalNumber(anonymizedPatient.BirthDate, anonymizedPatient.Sex);
+                        var nationalNumber = _nationalNumberGenerator.GenerateRandomNationalNumber(birthDate, sex);
 
+                        anonymizedPatient = new AnonymizedPatient(name, nationalNumber, birthDate, patientId, sex);
+                        
                         _anonymizedPatients[originalPatientName] = anonymizedPatient;
                     }
                 }
