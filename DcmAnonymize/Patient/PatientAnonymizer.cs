@@ -65,6 +65,7 @@ namespace DcmAnonymize.Patient
             dicomDataSet.AddOrUpdate(DicomTag.PatientIdentityRemoved, "YES");
             dicomDataSet.AddOrUpdate(DicomTag.DeidentificationMethod, $"DcmAnonymize {typeof(DicomAnonymizer).Assembly.GetName().Version}");
             dicomDataSet.Remove(DicomTag.DeidentificationMethodCodeSequence);
+            dicomDataSet.Remove(DicomTag.ReferencedPatientSequence);
         }
         
         private DateTime GenerateRandomBirthdate()
