@@ -155,7 +155,7 @@ namespace DcmAnonymize.Tests
         {
             // Arrange
             var sampleFileCopy = $"./SampleDicomFileCopy-{Guid.NewGuid()}.dcm";
-            File.Copy("./SampleDicomFile.dcm", sampleFileCopy);
+            File.Copy("./SampleDicomFile.DCM", sampleFileCopy);
             try
             {
                 var sampleDicomFile = await DicomFile.OpenAsync(sampleFileCopy);
