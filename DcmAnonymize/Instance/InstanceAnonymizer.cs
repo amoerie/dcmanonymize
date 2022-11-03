@@ -3,22 +3,23 @@ using System.Globalization;
 using System.Threading.Tasks;
 using FellowOakDicom;
 
-namespace DcmAnonymize.Instance
+namespace DcmAnonymize.Instance;
+
+public class InstanceAnonymizer
 {
-    public class InstanceAnonymizer
+    public Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
     {
-        public Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
-        {
-            var newSopInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID();
-
-            metaInfo.MediaStorageSOPInstanceUID = newSopInstanceUID;
-            metaInfo.SourceApplicationEntityTitle = "DcmAnonymize";
+        var originalSOPInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SOPInstanceUID);
             
-            dicomDataSet.AddOrUpdate(DicomTag.SOPInstanceUID, newSopInstanceUID.UID);
-            dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationDate, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
-            dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationTime, DateTime.Now.ToString("HHmmss", CultureInfo.InvariantCulture));
+        var newSopInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID();
 
-            return Task.CompletedTask;
-        }
+        metaInfo.MediaStorageSOPInstanceUID = newSopInstanceUID;
+        metaInfo.SourceApplicationEntityTitle = "DcmAnonymize";
+            
+        dicomDataSet.AddOrUpdate(DicomTag.SOPInstanceUID, newSopInstanceUID.UID);
+        dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationDate, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+        dicomDataSet.AddOrUpdate(DicomTag.InstanceCreationTime, DateTime.Now.ToString("HHmmss", CultureInfo.InvariantCulture));
+
+        return Task.CompletedTask;
     }
 }
