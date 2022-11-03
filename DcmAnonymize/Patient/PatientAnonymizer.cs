@@ -28,8 +28,7 @@ public class PatientAnonymizer
     
         if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))
         {
-            var key = $"PATIENT_{originalPatientName}";
-            using (await KeyedSemaphore.LockAsync(key))
+            using (await KeyedSemaphore.LockAsync($"PATIENT_{originalPatientName}"))
             {
                 if (!_anonymizedPatients.TryGetValue(originalPatientName, out anonymizedPatient))
                 {

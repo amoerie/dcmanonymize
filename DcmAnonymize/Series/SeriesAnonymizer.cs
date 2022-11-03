@@ -18,8 +18,7 @@ public class SeriesAnonymizer
     
         if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out var anonymizedSeries))
         {
-            var key = $"SERIES_{originalSeriesInstanceUID}";
-            using (await KeyedSemaphore.LockAsync(key))
+            using (await KeyedSemaphore.LockAsync($"SERIES_{originalSeriesInstanceUID}"))
             {
                 if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out anonymizedSeries))
                 {

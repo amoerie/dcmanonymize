@@ -28,8 +28,7 @@ public class StudyAnonymizer
 
         if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out var anonymizedStudy))
         {
-            var key = $"STUDY_{originalStudyInstanceUID}";
-            using (await KeyedSemaphore.LockAsync(key))
+            using (await KeyedSemaphore.LockAsync($"STUDY_{originalStudyInstanceUID}"))
             {
                 if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out anonymizedStudy))
                 {

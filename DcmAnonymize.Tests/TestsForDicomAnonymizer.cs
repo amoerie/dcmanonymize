@@ -152,6 +152,39 @@ public class TestsForDicomAnonymizer
     }
         
     [Fact]
+    public async Task ShouldAnonymizeSameInstances()
+    {
+        // Arrange
+        var dicomDataSet1 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" },
+        };
+        var metaInfo1 = new DicomFileMetaInformation();
+        var dicomDataSet2 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" },
+        };
+        var metaInfo2 = new DicomFileMetaInformation();
+            
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
+        await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
+            
+        // Assert
+        var sopInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.SOPInstanceUID);
+        var sopInstanceUID2 = dicomDataSet2.GetSingleValue<string>(DicomTag.SOPInstanceUID);
+        sopInstanceUID1.Should().NotBe("1.1.1");
+        sopInstanceUID2.Should().NotBe("1.1.1");
+        sopInstanceUID1.Should().Be(sopInstanceUID2);
+    }
+        
+    [Fact]
     public async Task ShouldBeAbleToAnonymizeSampleDicomFile()
     {
         // Arrange
