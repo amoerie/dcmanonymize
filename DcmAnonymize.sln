@@ -10,6 +10,7 @@ ProjectSection(SolutionItems) = preProject
 	publish.ps1 = publish.ps1
 	README.MD = README.MD
 	global.json = global.json
+	.gitignore = .gitignore
 EndProjectSection
 EndProject
 Global

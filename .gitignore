@@ -13,6 +13,7 @@
 **/.idea/**/dataSources.local.xml
 **/.idea/**/sqlDataSources.xml
 **/.idea/**/dynamic.xml
+**/.idea/**/git_toolbox_prj.xml
 
 # Rider
 # Rider auto-generates .iml files, and contentModel.xml
