@@ -1,14 +1,18 @@
 using System;
 using DcmAnonymize.Names;
-using Dicom;
 
-namespace DcmAnonymize
+namespace DcmAnonymize.Patient;
+
+public record AnonymizedPatient(
+    RandomName Name,
+    string NationalNumber,
+    DateTime BirthDate,
+    string PatientId,
+    PatientSex? Sex);
+
+public enum PatientSex
 {
-    public class AnonymizedPatient
-    {
-        public RandomName Name { get; set; }
-        public string NationalNumber { get; set; }
-        public DateTime BirthDate { get; set; }
-        public string PatientId { get; set; }
-    }
+    Male,
+    Female,
+    Other
 }
