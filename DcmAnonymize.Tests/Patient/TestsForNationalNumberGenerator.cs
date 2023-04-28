@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using DcmAnonymize.Patient;
 using FluentAssertions;
 using Xunit;

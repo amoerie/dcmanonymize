@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
@@ -21,18 +22,19 @@ public class StudyAnonymizer
         _random = new Random();
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
     {
         var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
         var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
 
         if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out var anonymizedStudy))
         {
-            using (await KeyedSemaphore.LockAsync($"STUDY_{originalStudyInstanceUID}"))
+            using (await KeyedSemaphore.LockAsync(originalStudyInstanceUID))
             {
                 if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out anonymizedStudy))
                 {
-                    var studyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                    var anonymizedStudyInstanceUID = anonymizedUIDs.GetOrAdd(originalStudyInstanceUID, _ => DicomUIDGenerator.GenerateDerivedFromUUID());
+                    anonymizedUIDs[anonymizedStudyInstanceUID.UID] = anonymizedStudyInstanceUID;
                     var accessionNumber = $"{originalModality}{DateTime.Now:yyyyMMddHHmm}{_counter++}";
                     var requestingPhysician = _randomNameGenerator.GenerateRandomName();
                     var studyDateTime = DateTime.Now;
@@ -41,7 +43,7 @@ public class StudyAnonymizer
                     var performingPhysician = _randomNameGenerator.GenerateRandomName();
 
                     anonymizedStudy = new AnonymizedStudy(
-                        studyInstanceUID,
+                        anonymizedStudyInstanceUID,
                         accessionNumber,
                         studyDateTime,
                         requestingPhysician,

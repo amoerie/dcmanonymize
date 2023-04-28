@@ -1,5 +1,4 @@
-using System;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
@@ -188,25 +187,58 @@ public class TestsForDicomAnonymizer
     public async Task ShouldBeAbleToAnonymizeSampleDicomFile()
     {
         // Arrange
-        var sampleFileCopy = $"./SampleDicomFileCopy-{Guid.NewGuid()}.dcm";
-        File.Copy("./SampleDicomFile.DCM", sampleFileCopy);
-        try
-        {
-            var sampleDicomFile = await DicomFile.OpenAsync(sampleFileCopy);
-            var metaInfo = sampleDicomFile.FileMetaInfo;
-            var dicomDataSet = sampleDicomFile.Dataset;
-                
-            dicomDataSet.Validate();
+        var sampleDicomFile = await DicomFile.OpenAsync("./TestData/SampleDicomFile.dcm");
+        var metaInfo = sampleDicomFile.FileMetaInfo;
+        var dicomDataSet = sampleDicomFile.Dataset;
+            
+        dicomDataSet.Validate();
 
-            // Act
-            await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet);
 
-            // Assert
-            dicomDataSet.Validate();
-        }
-        finally
-        {
-            File.Delete(sampleFileCopy);
-        }
+        // Assert
+        dicomDataSet.Validate();
+    }
+
+    [Fact]
+    public async Task ShouldRetainReferences()
+    {
+        // Arrange
+        const string file1 = "./TestData/Im1-removedByRJ1-113037.dcm";
+        const string file2 = "./TestData/RJ1-113037.dcm";
+        var dicomFile1 = await DicomFile.OpenAsync(file1);
+        var dicomFile2 = await DicomFile.OpenAsync(file2);
+        var sopInstanceUID = dicomFile1.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID);
+        var currentRequestedProcedureEvidenceSequence = dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
+        var referencedSeriesSequence = currentRequestedProcedureEvidenceSequence.Single().GetSequence(DicomTag.ReferencedSeriesSequence);
+        var referencedSopSequence = referencedSeriesSequence.Single().GetSequence(DicomTag.ReferencedSOPSequence);
+        var firstReferencedSopInstanceUID = referencedSopSequence.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
+        
+        // Ensure our test data is correct
+        sopInstanceUID.Should().NotBeNullOrEmpty();
+        firstReferencedSopInstanceUID.Should().NotBeNullOrEmpty();
+        firstReferencedSopInstanceUID.Should().Be(sopInstanceUID); 
+        
+        // Act
+        await _anonymizer.AnonymizeAsync(dicomFile1.FileMetaInfo, dicomFile1.Dataset);
+        await _anonymizer.AnonymizeAsync(dicomFile2.FileMetaInfo, dicomFile2.Dataset);
+
+        // Assert
+        var sopInstanceUID2 = dicomFile1.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID);
+        var currentRequestedProcedureEvidenceSequence2 = dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
+        var referencedSeriesSequence2 = currentRequestedProcedureEvidenceSequence2.Single().GetSequence(DicomTag.ReferencedSeriesSequence);
+        var referencedSopSequence2 = referencedSeriesSequence2.Single().GetSequence(DicomTag.ReferencedSOPSequence);
+        var firstReferencedSopInstanceUID2 = referencedSopSequence2.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
+
+        // Ensure data is still present
+        sopInstanceUID2.Should().NotBeNullOrEmpty();
+        firstReferencedSopInstanceUID2.Should().NotBeNullOrEmpty();
+        
+        // Ensure data is anonymized
+        sopInstanceUID.Should().NotBe(sopInstanceUID2);
+        firstReferencedSopInstanceUID.Should().NotBe(firstReferencedSopInstanceUID2);
+        
+        // Ensure referential integrity is retained
+        sopInstanceUID2.Should().Be(firstReferencedSopInstanceUID2);
     }
 }

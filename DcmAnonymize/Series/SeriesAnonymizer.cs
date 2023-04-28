@@ -12,20 +12,21 @@ public class SeriesAnonymizer
 {
     private readonly ConcurrentDictionary<string, AnonymizedSeries> _anonymizedStudies = new ConcurrentDictionary<string, AnonymizedSeries>();
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
     {
         var originalSeriesInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
     
         if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out var anonymizedSeries))
         {
-            using (await KeyedSemaphore.LockAsync($"SERIES_{originalSeriesInstanceUID}"))
+            using (await KeyedSemaphore.LockAsync(originalSeriesInstanceUID))
             {
                 if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out anonymizedSeries))
                 {
-                    var seriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                    var anonymizedSeriesInstanceUID = anonymizedUIDs.GetOrAdd(originalSeriesInstanceUID, _ => DicomUIDGenerator.GenerateDerivedFromUUID());
+                    anonymizedUIDs[anonymizedSeriesInstanceUID.UID] = anonymizedSeriesInstanceUID;
                     var seriesDateTime = DateTime.Now;
 
-                    anonymizedSeries = new AnonymizedSeries(seriesInstanceUID, seriesDateTime);
+                    anonymizedSeries = new AnonymizedSeries(anonymizedSeriesInstanceUID, seriesDateTime);
                         
                     _anonymizedStudies[originalSeriesInstanceUID] = anonymizedSeries;
                 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
@@ -22,7 +23,7 @@ public class PatientAnonymizer
         _nationalNumberGenerator = nationalNumberGenerator ?? throw new ArgumentNullException(nameof(nationalNumberGenerator));
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
     {
         var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
     

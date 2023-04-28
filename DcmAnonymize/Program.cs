@@ -129,7 +129,7 @@ public static class Program
 
         try
         {
-            await anonymizer.AnonymizeAsync(dicomFile.FileMetaInfo, dicomFile.Dataset);
+            await anonymizer.AnonymizeAsync(dicomFile);
         }
         catch (Exception e)
         {
