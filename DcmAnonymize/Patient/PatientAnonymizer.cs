@@ -23,8 +23,9 @@ public class PatientAnonymizer
         _nationalNumberGenerator = nationalNumberGenerator ?? throw new ArgumentNullException(nameof(nationalNumberGenerator));
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
         var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
     
         if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))

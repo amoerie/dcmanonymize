@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using FellowOakDicom;
@@ -12,8 +11,10 @@ public class SeriesAnonymizer
 {
     private readonly ConcurrentDictionary<string, AnonymizedSeries> _anonymizedStudies = new ConcurrentDictionary<string, AnonymizedSeries>();
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
+        var anonymizedUIDs = context.AnonymizedUIDs;
         var originalSeriesInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
     
         if (!_anonymizedStudies.TryGetValue(originalSeriesInstanceUID, out var anonymizedSeries))

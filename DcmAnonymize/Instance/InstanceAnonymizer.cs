@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using FellowOakDicom;
@@ -17,8 +16,12 @@ public class InstanceAnonymizer
         _anonymizedInstances = new ConcurrentDictionary<string, AnonymizedInstance>();
     }
     
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
+        var anonymizedUIDs = context.AnonymizedUIDs;
+        var metaInfo = context.MetaInfo;
+        
         var originalSopInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SOPInstanceUID);
 
         if (!_anonymizedInstances.TryGetValue(originalSopInstanceUID, out var anonymizedInstance))

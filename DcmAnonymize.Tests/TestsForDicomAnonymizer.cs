@@ -5,6 +5,7 @@ using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;
+using DcmAnonymize.UIDs;
 using FellowOakDicom;
 using FluentAssertions;
 using Xunit;
@@ -23,7 +24,8 @@ public class TestsForDicomAnonymizer
             new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator), 
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(), 
-            new InstanceAnonymizer());
+            new InstanceAnonymizer(),
+            new UIDsAnonymizer());
     }
         
     [Fact]

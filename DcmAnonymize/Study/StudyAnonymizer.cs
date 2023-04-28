@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
@@ -22,8 +21,10 @@ public class StudyAnonymizer
         _random = new Random();
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet, ConcurrentDictionary<string, DicomUID> anonymizedUIDs)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
+        var anonymizedUIDs = context.AnonymizedUIDs;
         var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
         var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
 

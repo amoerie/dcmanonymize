@@ -80,7 +80,8 @@ public static class Program
             new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator),
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(),
-            new InstanceAnonymizer()
+            new InstanceAnonymizer(),
+            new UIDsAnonymizer()
         );
 
         await Task.WhenAll(
