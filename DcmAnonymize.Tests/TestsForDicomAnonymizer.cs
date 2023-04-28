@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
 using DcmAnonymize.Patient;
+using DcmAnonymize.Recursive;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;
-using DcmAnonymize.UIDs;
 using FellowOakDicom;
 using FluentAssertions;
 using Xunit;
@@ -25,7 +25,7 @@ public class TestsForDicomAnonymizer
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(), 
             new InstanceAnonymizer(),
-            new UIDsAnonymizer());
+            new RecursiveAnonymizer());
     }
         
     [Fact]

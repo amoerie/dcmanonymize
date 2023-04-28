@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Patient;
+using DcmAnonymize.Recursive;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;
-using DcmAnonymize.UIDs;
 using FellowOakDicom;
 
 namespace DcmAnonymize;
@@ -18,17 +18,18 @@ public class DicomAnonymizer
     private readonly StudyAnonymizer _studyAnonymizer;
     private readonly SeriesAnonymizer _seriesAnonymizer;
     private readonly InstanceAnonymizer _instanceAnonymizer;
-    private readonly UIDsAnonymizer _uidsAnonymizer;
+    private readonly RecursiveAnonymizer _recursiveAnonymizer;
     private readonly ConcurrentDictionary<string, DicomUID> _anonymizedUIDs = new ConcurrentDictionary<string, DicomUID>();
 
     public DicomAnonymizer(PatientAnonymizer patientAnonymizer, StudyAnonymizer studyAnonymizer,
-        SeriesAnonymizer seriesAnonymizer, InstanceAnonymizer instanceAnonymizer, UIDsAnonymizer uidsAnonymizer)
+        SeriesAnonymizer seriesAnonymizer, InstanceAnonymizer instanceAnonymizer, 
+        RecursiveAnonymizer recursiveAnonymizer)
     {
         _patientAnonymizer = patientAnonymizer ?? throw new ArgumentNullException(nameof(patientAnonymizer));
         _studyAnonymizer = studyAnonymizer ?? throw new ArgumentNullException(nameof(studyAnonymizer));
         _seriesAnonymizer = seriesAnonymizer ?? throw new ArgumentNullException(nameof(seriesAnonymizer));
         _instanceAnonymizer = instanceAnonymizer ?? throw new ArgumentNullException(nameof(instanceAnonymizer));
-        _uidsAnonymizer = uidsAnonymizer;
+        _recursiveAnonymizer = recursiveAnonymizer;
     }
 
     public Task AnonymizeAsync(DicomFile dicomFile)
@@ -43,7 +44,7 @@ public class DicomAnonymizer
         await _studyAnonymizer.AnonymizeAsync(context);
         await _seriesAnonymizer.AnonymizeAsync(context);
         await _instanceAnonymizer.AnonymizeAsync(context);
-        await _uidsAnonymizer.AnonymizeAsync(context);
+        await _recursiveAnonymizer.AnonymizeAsync(context);
         
         
     }

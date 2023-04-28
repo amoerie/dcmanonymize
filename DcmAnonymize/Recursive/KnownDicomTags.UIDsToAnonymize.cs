@@ -1,73 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using FellowOakDicom;
-using KeyedSemaphores;
 
-namespace DcmAnonymize.UIDs;
+namespace DcmAnonymize.Recursive;
 
-public class UIDsAnonymizer
+public static partial class KnownDicomTags
 {
-    public async Task AnonymizeAsync(DicomAnonymizationContext context)
-    {
-        var dicomDataset = context.Dataset;
-        var anonymizedUIDs = context.AnonymizedUIDs;
-        // Ensure referential integrity of anonymized UIDs
-        var stack = new Stack<DicomDataset>();
-        stack.Push(dicomDataset);
-        while (stack.Count > 0)
-        {
-            var next = stack.Pop();
-
-            foreach (var item in next.ToList())
-            {
-                if (item is DicomSequence dicomSequence)
-                {
-                    foreach (var dicomSequenceItem in dicomSequence)
-                    {
-                        stack.Push(dicomSequenceItem);
-                    }
-                    continue;
-                }
-
-                if (item.ValueRepresentation != DicomVR.UI
-                    || !UIDTagsToAnonymize.Contains(item.Tag))
-                {
-                    continue;
-                }
-                
-                var originalUIDs = ((DicomUniqueIdentifier)item).Get<DicomUID[]>();
-                var currentAnonymizedUIDs = new DicomUID[originalUIDs.Length];
-
-                var hasChanged = false;
-                for (int i = 0; i < originalUIDs.Length; i++)
-                {
-                    var originalUID = originalUIDs[i];
-                    if (anonymizedUIDs.TryGetValue(originalUID.UID, out var anonymizedUID) && originalUID.UID != anonymizedUID.UID)
-                    {
-                        currentAnonymizedUIDs[i] = anonymizedUID;
-                        hasChanged = true;
-                        continue;
-                    }
-                
-                    using (await KeyedSemaphore.LockAsync(originalUID.UID))
-                    {
-                        anonymizedUID = anonymizedUIDs.GetOrAdd(originalUID.UID, _ => DicomUIDGenerator.GenerateDerivedFromUUID());
-                        currentAnonymizedUIDs[i] = anonymizedUID;
-                        hasChanged = true;
-                    }
-                }
-
-                if (hasChanged)
-                {
-                    next.AddOrUpdate(new DicomUniqueIdentifier(item.Tag, currentAnonymizedUIDs));
-                }
-
-            }
-        }
-    }
-
-    private static readonly ISet<DicomTag> UIDTagsToAnonymize = new []
+    public static readonly ISet<DicomTag> UIDTagsToAnonymize = new []
     {
         DicomTag.AcquisitionUID,
         DicomTag.AffectedSOPInstanceUID,
@@ -126,4 +65,5 @@ public class UIDsAnonymizer
         DicomTag.UID,
         DicomTag.Unknown
     }.ToHashSet();
+
 }

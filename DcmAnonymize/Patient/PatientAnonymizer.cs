@@ -65,9 +65,6 @@ public class PatientAnonymizer
         dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
         dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate.ToString("yyyyMMdd"));
         dicomDataSet.AddOrUpdate(DicomTag.PatientID, anonymizedPatient.PatientId);
-        dicomDataSet.Remove(DicomTag.PatientAddress);
-        dicomDataSet.Remove(DicomTag.MilitaryRank);
-        dicomDataSet.Remove(DicomTag.PatientTelephoneNumbers);
         dicomDataSet.AddOrUpdate(DicomTag.OtherPatientIDsRETIRED, anonymizedPatient.NationalNumber);
         dicomDataSet.AddOrUpdate(new DicomSequence(DicomTag.OtherPatientIDsSequence, 
             new DicomDataset {
@@ -84,7 +81,6 @@ public class PatientAnonymizer
         dicomDataSet.AddOrUpdate(DicomTag.PatientIdentityRemoved, "YES");
         dicomDataSet.AddOrUpdate(DicomTag.DeidentificationMethod, $"DcmAnonymize {typeof(DicomAnonymizer).Assembly.GetName().Version}");
         dicomDataSet.Remove(DicomTag.DeidentificationMethodCodeSequence);
-        dicomDataSet.Remove(DicomTag.ReferencedPatientSequence);
     }
         
     private DateTime GenerateRandomBirthdate()

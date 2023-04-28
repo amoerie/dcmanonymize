@@ -101,15 +101,11 @@ public class StudyAnonymizer
         //AdditionalTags
 
         dicomDataSet.AddOrUpdate(DicomTag.InstitutionName, anonymizedStudy.InstitutionName);
-        dicomDataSet.Remove(DicomTag.InstitutionAddress);
         dicomDataSet.AddOrUpdate(new DicomPersonName(
                 DicomTag.ReferringPhysicianName,
                 anonymizedStudy.RequestingPhysician.LastName,
                 anonymizedStudy.RequestingPhysician.FirstName
             )
         );
-        dicomDataSet.Remove(DicomTag.PhysiciansOfRecord);
-        dicomDataSet.Remove(DicomTag.ReferencedStudySequence);
-
     }
 }
