@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
+using DcmAnonymize.Order;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Recursive;
 using DcmAnonymize.Series;
@@ -82,7 +83,8 @@ public static class Program
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(),
             new InstanceAnonymizer(),
-            new RecursiveAnonymizer(dummyValueFiller)
+            new RecursiveAnonymizer(dummyValueFiller),
+            new OrderAnonymizer()
         );
 
         await Task.WhenAll(

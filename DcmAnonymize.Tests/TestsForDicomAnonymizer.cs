@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
+using DcmAnonymize.Order;
 using DcmAnonymize.Patient;
 using DcmAnonymize.Recursive;
 using DcmAnonymize.Series;
@@ -46,7 +47,8 @@ public class TestsForDicomAnonymizer
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(), 
             new InstanceAnonymizer(),
-            new RecursiveAnonymizer(dummyValueFiller));
+            new RecursiveAnonymizer(dummyValueFiller),
+            new OrderAnonymizer());
     }
         
     [Fact]
@@ -107,6 +109,54 @@ public class TestsForDicomAnonymizer
         patientName1.Should().Be(patientName2);
     }
         
+    [Fact]
+    public async Task ShouldAnonymizeSameOrder()
+    {
+        // Arrange
+        var metaInfo1 = new DicomFileMetaInformation();
+        var metaInfo2 = new DicomFileMetaInformation();
+        var metaInfo3 = new DicomFileMetaInformation();
+        var dicomDataSet1 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" },
+            { DicomTag.PlacerOrderNumberImagingServiceRequest, "ORDER1" },
+        };
+        var dicomDataSet2 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "2" },
+            { DicomTag.SeriesInstanceUID, "2.1" },
+            { DicomTag.SOPInstanceUID, "2.1.1" },
+            { DicomTag.PlacerOrderNumberImagingServiceRequest, "ORDER1" },
+        };
+        var dicomDataSet3 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Fuu" },
+            { DicomTag.StudyInstanceUID, "3" },
+            { DicomTag.SeriesInstanceUID, "3.1" },
+            { DicomTag.SOPInstanceUID, "3.1.1" },
+            { DicomTag.PlacerOrderNumberImagingServiceRequest, "ORDER2" },
+        };
+            
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1);
+        await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2);
+        await _anonymizer.AnonymizeAsync(metaInfo3, dicomDataSet3);
+            
+        // Assert
+        var orderNumber1 = dicomDataSet1.GetSingleValue<string>(DicomTag.PlacerOrderNumberImagingServiceRequest);
+        var orderNumber2 = dicomDataSet2.GetSingleValue<string>(DicomTag.PlacerOrderNumberImagingServiceRequest);
+        var orderNumber3 = dicomDataSet3.GetSingleValue<string>(DicomTag.PlacerOrderNumberImagingServiceRequest);
+        orderNumber1.Should().NotBe("ORDER1");
+        orderNumber2.Should().NotBe("ORDER1");
+        orderNumber3.Should().NotBe("ORDER2");
+        orderNumber1.Should().Be(orderNumber2);
+        orderNumber3.Should().NotBe(orderNumber1);
+    }
+    
     [Fact]
     public async Task ShouldAnonymizeSameStudy()
     {
