@@ -21,7 +21,6 @@ public static partial class KnownDicomTags
         DicomTag.AdmittingDiagnosesCodeSequence,
         DicomTag.AdmittingDiagnosesDescription,
         DicomTag.AdmittingTime,
-        DicomTag.AffectedSOPInstanceUID,
         DicomTag.Allergies,
         DicomTag.AnnotationGroupDescription,
         DicomTag.ApprovalStatusDateTime,

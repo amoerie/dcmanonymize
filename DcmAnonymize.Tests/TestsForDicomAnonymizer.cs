@@ -27,18 +27,25 @@ public class TestsForDicomAnonymizer
         return data;
     });
     
+    public static readonly TheoryData<DicomTag> TagsToClean = KnownDicomTags.TagsToClean.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
+    {
+        data.Add(tag);
+        return data;
+    });
+    
     private readonly DicomAnonymizer _anonymizer;
 
     public TestsForDicomAnonymizer()
     {
         var randomNameGenerator = new RandomNameGenerator();
         var nationalNumberGenerator = new NationalNumberGenerator();
+        var dummyValueFiller = new DicomTagCleaner(randomNameGenerator);
         _anonymizer = new DicomAnonymizer(
             new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator), 
             new StudyAnonymizer(randomNameGenerator),
             new SeriesAnonymizer(), 
             new InstanceAnonymizer(),
-            new RecursiveAnonymizer());
+            new RecursiveAnonymizer(dummyValueFiller));
     }
         
     [Fact]
@@ -272,12 +279,12 @@ public class TestsForDicomAnonymizer
             { DicomTag.SeriesInstanceUID, "1.1" },
             { DicomTag.SOPInstanceUID, "1.1.1" },
         };
-        var valueRepresentations = DicomDictionary.Default[tag].ValueRepresentations;
-        if (valueRepresentations.Contains(DicomVR.SQ))
+        var valueRepresentation = DicomDictionary.Default[tag].ValueRepresentations.First();
+        if (valueRepresentation == DicomVR.SQ)
         {
             dataSet.Add(new DicomSequence(tag, new DicomDataset()));
         }
-        else if (valueRepresentations.Contains(DicomVR.OB))
+        else if (valueRepresentation == DicomVR.OB)
         {
             dataSet.Add(tag, Array.Empty<byte>());
         }
@@ -335,5 +342,73 @@ public class TestsForDicomAnonymizer
         dataSet1.GetSingleValue<DicomUID>(tag).Should().NotBe(originalUID);
         dataSet2.GetSingleValue<DicomUID>(tag).Should().NotBe(originalUID);
         dataSet1.GetSingleValue<DicomUID>(tag).Should().Be(dataSet2.GetSingleValue<DicomUID>(tag));
+    }
+
+    [Theory]
+    [MemberData(nameof(TagsToClean))]
+    public async Task ShouldCleanKnownTags(DicomTag tag)
+    {
+        // Arrange
+        var metaInfo = new DicomFileMetaInformation();
+        var dataSet = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" }
+        };
+        var valueRepresentation = DicomDictionary.Default[tag].ValueRepresentations.First();
+        if (valueRepresentation == DicomVR.SQ)
+        {
+            dataSet.Add(new DicomSequence(tag, new DicomDataset()));
+        }
+        else if (valueRepresentation == DicomVR.OB)
+        {
+            dataSet.Add(tag, new byte[] { 1,2,3 });
+        }
+        else if(valueRepresentation == DicomVR.DA
+                || valueRepresentation == DicomVR.DT 
+                || valueRepresentation == DicomVR.TM)
+        {
+            dataSet.Add(tag, DateTime.Now);
+        }
+        else if (valueRepresentation == DicomVR.AS)
+        {
+            dataSet.Add(tag, "065Y");
+        }
+        else if (valueRepresentation == DicomVR.UN)
+        {
+            dataSet.Add(tag, (byte) 1);
+        }
+        else
+        {
+            dataSet.Add(tag, "123");
+        }
+        var originalDataset = dataSet.Clone();
+            
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo, dataSet);
+            
+        // Assert
+        originalDataset.Contains(tag).Should().BeTrue();
+        dataSet.Contains(tag).Should().BeTrue();
+        if (valueRepresentation == DicomVR.SQ)
+        {
+            dataSet.GetSequence(tag).ToList().Should().HaveCount(1);
+        }
+        else if (valueRepresentation == DicomVR.OB || valueRepresentation == DicomVR.UN)
+        {
+            dataSet.GetValues<byte>(tag).Should().BeEmpty();
+        }
+        else if (valueRepresentation == DicomVR.PN)
+        {
+            var personName = dataSet.GetDicomItem<DicomPersonName>(tag);
+            personName.First.Should().NotBeEmpty();
+            personName.Last.Should().NotBeEmpty();
+        }
+        else
+        {
+            dataSet.GetString(tag).Should().Be(string.Empty);
+        }
     }
 }

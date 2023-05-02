@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +9,13 @@ namespace DcmAnonymize.Recursive;
 
 public class RecursiveAnonymizer
 {
+    private readonly DicomTagCleaner _dicomTagCleaner;
+
+    public RecursiveAnonymizer(DicomTagCleaner dicomTagCleaner)
+    {
+        _dicomTagCleaner = dicomTagCleaner ?? throw new ArgumentNullException(nameof(dicomTagCleaner));
+    }
+    
     public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
         var dicomDataset = context.Dataset;
@@ -31,6 +39,12 @@ public class RecursiveAnonymizer
                         stack.Push(dicomSequenceItem);
                     }
 
+                    continue;
+                }
+
+                if (KnownDicomTags.TagsToClean.Contains(item.Tag))
+                {
+                    _dicomTagCleaner.Clean(next, item);
                     continue;
                 }
 
