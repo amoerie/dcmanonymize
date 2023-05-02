@@ -5,6 +5,17 @@
 
 Anonymizes DICOM files on your disk.
 
+Features
+--------
+
+* Modified implementation of [DICOM Basic Security Profile](https://dicom.nema.org/medical/dicom/current/output/chtml/part15/chapter_E.html#sect_E.1)
+* Does not change or remove pixel data
+* Generates unique accession numbers, patient names, physician names, birth dates, UIDs, etc.
+* Retains patient > study > series > image structure across many files
+* Retains patient data consistency, DICOM file UID references, etc across many files
+* Fast
+* Simple
+
 Installation
 ------------
 
