@@ -13,6 +13,7 @@ using Xunit;
 
 namespace DcmAnonymize.Tests;
 
+[Collection("DcmAnonymize")]
 public class TestsForDicomAnonymizer
 {
     public static readonly TheoryData<DicomTag> TagsToRemove = KnownDicomTags.TagsToRemove.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>

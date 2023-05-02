@@ -5,6 +5,7 @@ using Xunit;
 
 namespace DcmAnonymize.Tests.Patient;
 
+[Collection("DcmAnonymize")]
 public class TestsForNationalNumberGenerator
 {
     private readonly NationalNumberGenerator _nationalNumberGenerator;

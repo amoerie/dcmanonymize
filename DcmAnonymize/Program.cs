@@ -33,16 +33,18 @@ public static class Program
     // ReSharper restore MemberCanBePrivate.Global
     // ReSharper restore ClassNeverInstantiated.Global
 
-    static async Task Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         switch (Parser.Default.ParseArguments<Options>(args))
         {
             case Parsed<Options> parsed:
                 await AnonymizeAsync(parsed.Value).ConfigureAwait(false);
-                break;
+                return 0;
             case NotParsed<Options> notParsed:
                 Fail(notParsed.Errors);
-                break;
+                return -1;
+            default:
+                throw new InvalidOperationException("Invalid parser result");
         }
     }
 
@@ -89,7 +91,7 @@ public static class Program
                 .GetPartitions(parallelism)
                 .AsParallel()
                 .Select(partition => AnonymizeFilesAsync(partition, anonymizer))
-        ).ConfigureAwait(false);
+        );
     }
 
     private static async Task AnonymizeFilesAsync(IEnumerator<FileInfo> files, DicomAnonymizer anonymizer)
