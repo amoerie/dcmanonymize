@@ -21,18 +21,21 @@ public class StudyAnonymizer
         _random = new Random();
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
+        var anonymizedUIDs = context.AnonymizedUIDs;
         var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
         var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
 
         if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out var anonymizedStudy))
         {
-            using (await KeyedSemaphore.LockAsync($"STUDY_{originalStudyInstanceUID}"))
+            using (await KeyedSemaphore.LockAsync(originalStudyInstanceUID))
             {
                 if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out anonymizedStudy))
                 {
-                    var studyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+                    var anonymizedStudyInstanceUID = anonymizedUIDs.GetOrAdd(originalStudyInstanceUID, _ => DicomUIDGenerator.GenerateDerivedFromUUID());
+                    anonymizedUIDs[anonymizedStudyInstanceUID.UID] = anonymizedStudyInstanceUID;
                     var accessionNumber = $"{originalModality}{DateTime.Now:yyyyMMddHHmm}{_counter++}";
                     var requestingPhysician = _randomNameGenerator.GenerateRandomName();
                     var studyDateTime = DateTime.Now;
@@ -41,7 +44,7 @@ public class StudyAnonymizer
                     var performingPhysician = _randomNameGenerator.GenerateRandomName();
 
                     anonymizedStudy = new AnonymizedStudy(
-                        studyInstanceUID,
+                        anonymizedStudyInstanceUID,
                         accessionNumber,
                         studyDateTime,
                         requestingPhysician,
@@ -98,15 +101,11 @@ public class StudyAnonymizer
         //AdditionalTags
 
         dicomDataSet.AddOrUpdate(DicomTag.InstitutionName, anonymizedStudy.InstitutionName);
-        dicomDataSet.Remove(DicomTag.InstitutionAddress);
         dicomDataSet.AddOrUpdate(new DicomPersonName(
                 DicomTag.ReferringPhysicianName,
                 anonymizedStudy.RequestingPhysician.LastName,
                 anonymizedStudy.RequestingPhysician.FirstName
             )
         );
-        dicomDataSet.Remove(DicomTag.PhysiciansOfRecord);
-        dicomDataSet.Remove(DicomTag.ReferencedStudySequence);
-
     }
 }

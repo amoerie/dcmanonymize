@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using DcmAnonymize.Names;
@@ -22,8 +23,9 @@ public class PatientAnonymizer
         _nationalNumberGenerator = nationalNumberGenerator ?? throw new ArgumentNullException(nameof(nationalNumberGenerator));
     }
 
-    public async Task AnonymizeAsync(DicomFileMetaInformation metaInfo, DicomDataset dicomDataSet)
+    public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
+        var dicomDataSet = context.Dataset;
         var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
     
         if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))
@@ -63,9 +65,6 @@ public class PatientAnonymizer
         dicomDataSet.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, anonymizedPatient.Name.LastName, anonymizedPatient.Name.FirstName));
         dicomDataSet.AddOrUpdate(DicomTag.PatientBirthDate, anonymizedPatient.BirthDate.ToString("yyyyMMdd"));
         dicomDataSet.AddOrUpdate(DicomTag.PatientID, anonymizedPatient.PatientId);
-        dicomDataSet.Remove(DicomTag.PatientAddress);
-        dicomDataSet.Remove(DicomTag.MilitaryRank);
-        dicomDataSet.Remove(DicomTag.PatientTelephoneNumbers);
         dicomDataSet.AddOrUpdate(DicomTag.OtherPatientIDsRETIRED, anonymizedPatient.NationalNumber);
         dicomDataSet.AddOrUpdate(new DicomSequence(DicomTag.OtherPatientIDsSequence, 
             new DicomDataset {
@@ -82,7 +81,6 @@ public class PatientAnonymizer
         dicomDataSet.AddOrUpdate(DicomTag.PatientIdentityRemoved, "YES");
         dicomDataSet.AddOrUpdate(DicomTag.DeidentificationMethod, $"DcmAnonymize {typeof(DicomAnonymizer).Assembly.GetName().Version}");
         dicomDataSet.Remove(DicomTag.DeidentificationMethodCodeSequence);
-        dicomDataSet.Remove(DicomTag.ReferencedPatientSequence);
     }
         
     private DateTime GenerateRandomBirthdate()

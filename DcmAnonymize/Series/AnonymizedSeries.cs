@@ -1,5 +1,6 @@
 using System;
+using FellowOakDicom;
 
 namespace DcmAnonymize.Series;
 
-public record AnonymizedSeries(string SeriesInstanceUID, DateTime SeriesDateTime);
+public record AnonymizedSeries(DicomUID SeriesInstanceUID, DateTime SeriesDateTime);

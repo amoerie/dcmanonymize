@@ -1,10 +1,11 @@
 using System;
 using DcmAnonymize.Names;
+using FellowOakDicom;
 
 namespace DcmAnonymize;
 
 public record AnonymizedStudy(
-    string StudyInstanceUID,
+    DicomUID StudyInstanceUID,
     string AccessionNumber,
     DateTime StudyDateTime,
     RandomName RequestingPhysician,
