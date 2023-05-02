@@ -62,8 +62,7 @@ public static partial class KnownDicomTags
         DicomTag.TransactionUID,
         DicomTag.TreatmentPositionGroupUID,
         DicomTag.TreatmentSessionUID,
-        DicomTag.UID,
-        DicomTag.Unknown
+        DicomTag.UID
     }.ToHashSet();
 
 }

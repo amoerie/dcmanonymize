@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DcmAnonymize.Instance;
@@ -14,6 +15,18 @@ namespace DcmAnonymize.Tests;
 
 public class TestsForDicomAnonymizer
 {
+    public static readonly TheoryData<DicomTag> TagsToRemove = KnownDicomTags.TagsToRemove.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
+    {
+        data.Add(tag);
+        return data;
+    });
+    
+    public static readonly TheoryData<DicomTag> UIDTagsToAnonymize = KnownDicomTags.UIDTagsToAnonymize.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
+    {
+        data.Add(tag);
+        return data;
+    });
+    
     private readonly DicomAnonymizer _anonymizer;
 
     public TestsForDicomAnonymizer()
@@ -242,5 +255,85 @@ public class TestsForDicomAnonymizer
         
         // Ensure referential integrity is retained
         sopInstanceUID2.Should().Be(firstReferencedSopInstanceUID2);
+    }
+
+
+
+    [Theory]
+    [MemberData(nameof(TagsToRemove))]
+    public async Task ShouldRemoveKnownTags(DicomTag tag)
+    {
+        // Arrange
+        var metaInfo = new DicomFileMetaInformation();
+        var dataSet = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" },
+        };
+        var valueRepresentations = DicomDictionary.Default[tag].ValueRepresentations;
+        if (valueRepresentations.Contains(DicomVR.SQ))
+        {
+            dataSet.Add(new DicomSequence(tag, new DicomDataset()));
+        }
+        else if (valueRepresentations.Contains(DicomVR.OB))
+        {
+            dataSet.Add(tag, Array.Empty<byte>());
+        }
+        else
+        {
+            dataSet.Add(tag, string.Empty);
+        }
+        var originalDataset = dataSet.Clone();
+            
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo, dataSet);
+            
+        // Assert
+        originalDataset.Contains(tag).Should().BeTrue();
+        dataSet.Contains(tag).Should().BeFalse();
+        dataSet.Contains(DicomTag.PatientName).Should().BeTrue();
+    }
+
+    [Theory]
+    [MemberData(nameof(UIDTagsToAnonymize))]
+    public async Task ShouldAnonymizeKnownUIDTags(DicomTag tag)
+    {
+        // Arrange
+        var metaInfo1 = new DicomFileMetaInformation();
+        var metaInfo2 = new DicomFileMetaInformation();
+        var originalUID = DicomUIDGenerator.GenerateDerivedFromUUID();
+        var dataSet1 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" }
+        };
+        var dataSet2 = new DicomDataset
+        {
+            { DicomTag.PatientName, "Bar^Foo" },
+            { DicomTag.StudyInstanceUID, "1" },
+            { DicomTag.SeriesInstanceUID, "1.1" },
+            { DicomTag.SOPInstanceUID, "1.1.1" }
+        };
+        dataSet1.AddOrUpdate(tag, originalUID);
+        dataSet2.AddOrUpdate(tag, originalUID);
+        var originalDataset1 = dataSet1.Clone();
+        var originalDataset2 = dataSet2.Clone();
+            
+        // Act
+        await Task.WhenAll(
+            Task.Run(() => _anonymizer.AnonymizeAsync(metaInfo1, dataSet1)),
+            Task.Run(() => _anonymizer.AnonymizeAsync(metaInfo2, dataSet2))
+        );
+            
+        // Assert
+        originalDataset1.GetSingleValue<DicomUID>(tag).Should().Be(originalUID);
+        originalDataset2.GetSingleValue<DicomUID>(tag).Should().Be(originalUID);
+        dataSet1.GetSingleValue<DicomUID>(tag).Should().NotBe(originalUID);
+        dataSet2.GetSingleValue<DicomUID>(tag).Should().NotBe(originalUID);
+        dataSet1.GetSingleValue<DicomUID>(tag).Should().Be(dataSet2.GetSingleValue<DicomUID>(tag));
     }
 }
