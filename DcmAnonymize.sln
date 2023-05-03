@@ -11,6 +11,7 @@ ProjectSection(SolutionItems) = preProject
 	README.MD = README.MD
 	global.json = global.json
 	.gitignore = .gitignore
+	coverlet.runsettings = coverlet.runsettings
 EndProjectSection
 EndProject
 Global
