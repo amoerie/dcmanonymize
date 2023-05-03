@@ -300,7 +300,6 @@ public static partial class KnownDicomTags
         DicomTag.ReasonForVisit,
         DicomTag.ReasonForVisitCodeSequence,
         DicomTag.ReferencedDigitalSignatureSequence,
-        DicomTag.ReferencedImageSequence,
         DicomTag.ReferencedPatientAliasSequence,
         DicomTag.ReferencedPatientPhotoSequence,
         DicomTag.ReferencedPatientSequence,

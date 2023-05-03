@@ -36,7 +36,6 @@ public static partial class KnownDicomTags
         DicomTag.FrameOriginTimestamp,
         DicomTag.FrameReferenceDateTime,
         DicomTag.FunctionalSyncPulse,
-        DicomTag.GraphicAnnotationSequence,
         DicomTag.HangingProtocolCreationDateTime,
         DicomTag.ImpedanceMeasurementDateTime,
         DicomTag.InformationIssueDateTime,
