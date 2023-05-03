@@ -12,6 +12,7 @@ ProjectSection(SolutionItems) = preProject
 	global.json = global.json
 	.gitignore = .gitignore
 	coverlet.runsettings = coverlet.runsettings
+	.github\workflows\build.yml = .github\workflows\build.yml
 EndProjectSection
 EndProject
 Global
