@@ -1,7 +1,9 @@
 🕵️‍ DICOM ANONYMIZE
 ---------------
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Famoerie%2Fdcmanonymize%2Fbadge%3Fref%3Dmain&style=for-the-badge&label=Build)](https://actions-badge.atrox.dev/amoerie/dcmanonymize/goto?ref=main) [![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/DcmAnonymize?label=DcmAnonymize&style=for-the-badge)](https://www.nuget.org/packages/DcmAnonymize)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Famoerie%2Fdcmanonymize%2Fbadge%3Fref%3Dmain&style=for-the-badge&label=Build)](https://actions-badge.atrox.dev/amoerie/dcmanonymize/goto?ref=main) 
+[![Codecov](https://img.shields.io/codecov/c/github/amoerie/dcmanonymize?label=Coverage&logo=codecov&style=for-the-badge)](https://app.codecov.io/gh/amoerie/dcmanonymize)
+[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/DcmAnonymize?label=DcmAnonymize&style=for-the-badge)](https://www.nuget.org/packages/DcmAnonymize)
 
 Anonymizes DICOM files on your disk.
 
