@@ -20,10 +20,12 @@ Features
 
 Installation
 ------------
-
+**Recommended**
 ```
     dotnet tool install dcmanonymize --global
 ```
+**Alternative**
+Download from latest [Github release](https://github.com/amoerie/dcmanonymize/releases)
 
 Usage
 -----
