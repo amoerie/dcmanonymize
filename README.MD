@@ -21,9 +21,15 @@ Features
 Installation
 ------------
 
+**Recommended**
+Requires .NET SDK 7
 ```
     dotnet tool install dcmanonymize --global
 ```
+
+**Alternative**
+Requires .NET 7 runtime
+Download from latest [Github release](https://github.com/amoerie/dcmanonymize/releases)
 
 Usage
 -----
