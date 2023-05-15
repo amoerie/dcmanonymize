@@ -509,5 +509,38 @@ public class TestsForDicomAnonymizer
         var color = image.GetPixel(700, 700);
         color.Should().Be(Color32.Black);
     }
+    
+    [Fact]
+    public async Task ShouldBeAbleToBlankRectanglesOfMultiFrame()
+    {
+        // Arrange
+        var sampleDicomFile = await DicomFile.OpenAsync(@"TestData/SampleMultiFrame.dcm");
+        var metaInfo = sampleDicomFile.FileMetaInfo;
+        var dicomDataSet = sampleDicomFile.Dataset;
+            
+        dicomDataSet.Validate();
+
+        var options = _options with
+        {
+            RectanglesToBlank = new List<RectangleToBlank>
+            {
+                new RectangleToBlank(50, 50, 350, 350)
+            }
+        };
+
+        // Act
+        await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet, options);
+
+        // Assert
+        sampleDicomFile.Save(@"C:\Users\alexa\Downloads\out\us-multiframe.dcm");
+        dicomDataSet.Validate();
+        var dicomImage = new DicomImage(dicomDataSet);
+        for (var frame = 0; frame < dicomImage.NumberOfFrames; frame++)
+        {
+            using var image = dicomImage.RenderImage(frame);
+            var color = image.GetPixel(100, 100);
+            color.Should().Be(Color32.Black);
+        }
+    }
 
 }

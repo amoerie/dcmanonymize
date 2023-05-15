@@ -7,13 +7,14 @@
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>DcmAnonymize</ToolCommandName>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/amoerie/DcmAnonymize</RepositoryUrl>
     <Authors>Alexander Moerman</Authors>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>Embedded</DebugType>
-    
+    <Platform>x64</Platform>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

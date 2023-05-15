@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FellowOakDicom;
@@ -27,12 +28,43 @@ public class BlankingAnonymizer
         var numberOfFrames = decodedDataset.GetSingleValueOrDefault(DicomTag.NumberOfFrames, 1);
         var originalPixelData = DicomPixelData.Create(decodedDataset);
         var newPixelData = DicomPixelData.Create(newDataSet, true);
+        var photometricInterpration = originalPixelData.PhotometricInterpretation;
         
-        var bytesPerPixel = newPixelData.BytesAllocated;
+        var bytesPerPixel = newPixelData.BytesAllocated * newPixelData.SamplesPerPixel;
         var rowLength = bytesPerPixel * newPixelData.Width;
+
+        var transforms = new List<Func<IByteBuffer,IByteBuffer>>(); 
+        
+        if (originalPixelData.PlanarConfiguration == PlanarConfiguration.Planar)
+        {
+            newPixelData.PlanarConfiguration = PlanarConfiguration.Interleaved;
+            transforms.Add(PixelDataConverter.PlanarToInterleaved24);
+        }
+        
+        if (photometricInterpration == PhotometricInterpretation.YbrFull)
+        {
+            transforms.Add(PixelDataConverter.YbrFullToRgb);
+            newPixelData.PhotometricInterpretation = PhotometricInterpretation.Rgb;
+        }
+        else if (photometricInterpration == PhotometricInterpretation.YbrFull422)
+        {
+            transforms.Add(buffer => PixelDataConverter.YbrFull422ToRgb(buffer, originalPixelData.Width));
+            newPixelData.PhotometricInterpretation = PhotometricInterpretation.Rgb;
+        }
+        else  if (photometricInterpration == PhotometricInterpretation.YbrPartial422)
+        {
+            transforms.Add(buffer => PixelDataConverter.YbrPartial422ToRgb(buffer, originalPixelData.Width));
+            newPixelData.PhotometricInterpretation = PhotometricInterpretation.Rgb;
+        }
+        
         for (var frame = 0; frame < numberOfFrames; frame++)
         {
             var framePixelData = originalPixelData.GetFrame(frame);
+
+            foreach (var transform in transforms)
+            {
+                framePixelData = transform(framePixelData);
+            }
 
             var bytes = new byte[framePixelData.Size];
             framePixelData.CopyToStream(new MemoryStream(bytes));
@@ -42,12 +74,13 @@ public class BlankingAnonymizer
                 var (x1, y1, x2, y2) = rectangle;
                 var offsetX = x1 * bytesPerPixel;
                 var widthX = (x2 - x1) * bytesPerPixel;
+
                 for (var offsetY = y1 * rowLength; offsetY < y2 * rowLength; offsetY += rowLength)
                 {
                     Array.Fill(bytes, (byte) 0, offsetY + offsetX, widthX);
                 }
             }
-            
+
             newPixelData.AddFrame(new MemoryByteBuffer(bytes));
         }
 

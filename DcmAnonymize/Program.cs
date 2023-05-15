@@ -19,7 +19,7 @@ using FellowOakDicom.Imaging.NativeCodec;
 
 namespace DcmAnonymize;
 
-public static class Program
+public class Program
 {
     // ReSharper disable UnusedAutoPropertyAccessor.Global
     // ReSharper disable MemberCanBePrivate.Global
@@ -40,7 +40,18 @@ public static class Program
     // ReSharper restore MemberCanBePrivate.Global
     // ReSharper restore ClassNeverInstantiated.Global
 
-    public static async Task<int> Main(string[] args)
+    public TextReader Input { get; set; } = Console.In;
+    public TextWriter Output { get; set; } = Console.Out;
+    public TextWriter ErrorOutput { get; set; } = Console.Error;
+
+    public static Task<int> Main(string[] args)
+    {
+        var program = new Program();
+
+        return program.Run(args);
+    }
+    
+    public async Task<int> Run(string[] args)
     {
         // Configure Fellow Oak DICOM
         new DicomSetupBuilder()
@@ -50,8 +61,13 @@ public static class Program
                 s.AddTranscoderManager<NativeTranscoderManager>();
             })
             .Build();
+
+        var parser = new Parser(settings =>
+        {
+            settings.HelpWriter = ErrorOutput;
+        });
         
-        switch (Parser.Default.ParseArguments<Options>(args))
+        switch (parser.ParseArguments<Options>(args))
         {
             case Parsed<Options> parsed:
                 await AnonymizeAsync(parsed.Value).ConfigureAwait(false);
@@ -64,22 +80,22 @@ public static class Program
         }
     }
 
-    private static void Fail(IEnumerable<Error> errors)
+    private void Fail(IEnumerable<Error> errors)
     {
-        Console.Error.WriteLine("Invalid arguments provided");
+        ErrorOutput.WriteLine("Invalid arguments provided");
         foreach (var error in errors.Where(e => e.Tag != ErrorType.HelpRequestedError))
         {
-            Console.Error.WriteLine(error.ToString());
+            ErrorOutput.WriteLine(error.ToString());
         }
     }
 
-    private static async Task AnonymizeAsync(Options options)
+    private async Task AnonymizeAsync(Options options)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
 
         IEnumerable<FileInfo> ReadFilesFromConsole()
         {
-            while (Console.ReadLine() is { } file)
+            while (Input.ReadLine() is { } file)
             {
                 if (File.Exists(file))
                     yield return new FileInfo(file);
@@ -113,7 +129,7 @@ public static class Program
         );
     }
 
-    private static async Task AnonymizeFilesAsync(IEnumerator<FileInfo> files, DicomAnonymizer anonymizer, AnonymizationOptions options)
+    private async Task AnonymizeFilesAsync(IEnumerator<FileInfo> files, DicomAnonymizer anonymizer, AnonymizationOptions options)
     {
         using (files)
         {
@@ -124,7 +140,7 @@ public static class Program
         }
     }
 
-    private static async Task AnonymizeFileAsync(FileInfo file, DicomAnonymizer anonymizer, AnonymizationOptions options)
+    private async Task AnonymizeFileAsync(FileInfo file, DicomAnonymizer anonymizer, AnonymizationOptions options)
     {
         DicomFile dicomFile;
         using (var inputFileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096))
@@ -135,7 +151,7 @@ public static class Program
             }
             catch
             {
-                await Console.Error.WriteLineAsync("Not a DICOM file: " + file.FullName);
+                await ErrorOutput.WriteLineAsync("Not a DICOM file: " + file.FullName);
                 return;
             }
         }
@@ -152,7 +168,7 @@ public static class Program
         }
         catch (Exception e)
         {
-            await Console.Error.WriteLineAsync($"Failed to generate anonymous data for the provided DICOM file: {file.FullName}\n{e}");
+            await ErrorOutput.WriteLineAsync($"Failed to generate anonymous data for the provided DICOM file: {file.FullName}\n{e}");
             return;
         }
 
@@ -162,10 +178,10 @@ public static class Program
         }
         catch (Exception e)
         {
-            await Console.Error.WriteLineAsync($"Failed to overwrite the original DICOM file: {file.FullName}\n{e}");
+            await ErrorOutput.WriteLineAsync($"Failed to overwrite the original DICOM file: {file.FullName}\n{e}");
             return;
         }
 
-        Console.WriteLine(file.FullName);
+        await Output.WriteLineAsync(file.FullName);
     }
 }

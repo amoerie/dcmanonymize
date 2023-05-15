@@ -36,7 +36,7 @@ public record AnonymizationOptions(List<RectangleToBlank> RectanglesToBlank)
         {
             throw new ArgumentException("Empty coordinate in rectangle to blank");
         }
-        var coordinateValues = coordinate.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var coordinateValues = coordinate.TrimStart('(').TrimEnd(')').Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (coordinateValues.Length != 2)
         {
             throw new ArgumentException("Invalid coordinate in rectangle to blank: " + coordinate);

@@ -26,7 +26,12 @@ public class PatientAnonymizer
     public async Task AnonymizeAsync(DicomAnonymizationContext context)
     {
         var dicomDataSet = context.Dataset;
-        var originalPatientName = dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).TrimEnd();
+        var originalPatientName = dicomDataSet.GetSingleValueOrDefault(DicomTag.PatientName, string.Empty).TrimEnd();
+
+        if (string.IsNullOrEmpty(originalPatientName))
+        {
+            originalPatientName = Guid.NewGuid().ToString();
+        }
     
         if (!_anonymizedPatients.TryGetValue(originalPatientName, out var anonymizedPatient))
         {

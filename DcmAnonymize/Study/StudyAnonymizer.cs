@@ -25,7 +25,13 @@ public class StudyAnonymizer
     {
         var dicomDataSet = context.Dataset;
         var anonymizedUIDs = context.AnonymizedUIDs;
-        var originalStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
+        var originalStudyInstanceUID = dicomDataSet.GetSingleValueOrDefault(DicomTag.StudyInstanceUID, string.Empty);
+
+        if (string.IsNullOrEmpty(originalStudyInstanceUID))
+        {
+            originalStudyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+        }
+        
         var originalModality = dicomDataSet.GetValueOrDefault<string>(DicomTag.Modality, 0, null!);
 
         if (!_anonymizedStudies.TryGetValue(originalStudyInstanceUID, out var anonymizedStudy))

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,51 +8,49 @@ using Xunit.Abstractions;
 namespace DcmAnonymize.Tests;
 
 [Collection("DcmAnonymize")]
-public class TestsForDcmAnonymize : IDisposable
+public class TestsForDcmAnonymize : IAsyncLifetime
 {
-    private readonly TextWriter _originalOut;
-    private readonly TextWriter _originalError;
     private readonly ITestOutputHelper _testOutputHelper;
-    private readonly StringBuilder _output;
-    private readonly StringBuilder _errorOutput;
-    private readonly StringWriter _outputWriter;
-    private readonly StringWriter _errorOutputWriter;
-    private readonly TextReader _inputReader;
-    private readonly TextReader _originalIn;
-    private readonly FileInfo _dicomFile;
+
+    private StringBuilder _output;
+    private StringBuilder _errorOutput;
+    private StringWriter _outputWriter;
+    private StringWriter _errorOutputWriter;
+    private TextReader _inputReader;
+    private FileInfo _dicomFile;
+    private Program _program;
 
     public TestsForDcmAnonymize(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper ?? throw new ArgumentNullException(nameof(testOutputHelper));
-        
+    }
+
+    public Task InitializeAsync()
+    {
         var testDataDirectory = new DirectoryInfo("./TestData");
         var sampleDicomFile = new FileInfo(Path.Join(testDataDirectory.Name, "SampleDicomFile.dcm"));
         var sampleDicomFileCopy = new FileInfo(Path.Join(testDataDirectory.Name, $"SampleDicomFile_{Guid.NewGuid()}.dcm"));
         File.Copy(sampleDicomFile.FullName, sampleDicomFileCopy.FullName);
         _dicomFile = sampleDicomFileCopy;
-        
         _output = new StringBuilder();
         _outputWriter = new StringWriter(_output);
         _errorOutput = new StringBuilder();
         _errorOutputWriter = new StringWriter(_errorOutput);
-        _originalIn = Console.In;
-        _originalOut = Console.Out;
-        _originalError = Console.Error;
         _inputReader = new StringReader(_dicomFile.FullName + Environment.NewLine);
-        Console.SetIn(_inputReader);
-        Console.SetOut(_outputWriter);
-        Console.SetError(_errorOutputWriter);
+        _program = new Program
+        {
+            Input = _inputReader,
+            Output = _outputWriter,
+            ErrorOutput = _errorOutputWriter
+        };
+        return Task.CompletedTask;
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
-        _testOutputHelper.WriteLine(_output.ToString());
-        _outputWriter.Dispose();
-        _errorOutputWriter.Dispose();
+        await _outputWriter.DisposeAsync();
+        await _errorOutputWriter.DisposeAsync();
         _inputReader.Dispose();
-        Console.SetIn(_originalIn);
-        Console.SetOut(_originalOut);
-        Console.SetError(_originalError);
 
         var remainingAttempts = 3;
         while (remainingAttempts > 0 && File.Exists(_dicomFile.FullName))
@@ -65,7 +62,7 @@ public class TestsForDcmAnonymize : IDisposable
             catch
             {
                 remainingAttempts--;
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
             }
         }
     }
@@ -77,12 +74,14 @@ public class TestsForDcmAnonymize : IDisposable
         var expected = $"{_dicomFile.FullName}{Environment.NewLine}";
 
         // Act
-        var statusCode = await Program.Main(new []
+        var statusCode = await _program.Run(new[]
         {
             _dicomFile.FullName
         });
 
         // Assert
+        _testOutputHelper.WriteLine(_output.ToString());
+        _testOutputHelper.WriteLine(_errorOutput.ToString());
         Assert.Equal(expected, _output.ToString());
         Assert.Equal(string.Empty, _errorOutput.ToString());
         Assert.Equal(0, statusCode);
@@ -95,9 +94,11 @@ public class TestsForDcmAnonymize : IDisposable
         var expected = $"{_dicomFile.FullName}{Environment.NewLine}";
 
         // Act
-        var statusCode = await Program.Main(Array.Empty<string>());
+        var statusCode = await _program.Run(Array.Empty<string>());
 
         // Assert
+        _testOutputHelper.WriteLine(_output.ToString());
+        _testOutputHelper.WriteLine(_errorOutput.ToString());
         Assert.Equal(expected, _output.ToString());
         Assert.Equal(string.Empty, _errorOutput.ToString());
         Assert.Equal(0, statusCode);
@@ -106,13 +107,57 @@ public class TestsForDcmAnonymize : IDisposable
     [Fact]
     public async Task ShouldFailWhenPassedInvalidArgs()
     {
-        // Act
-        var statusCode = await Program.Main(new []
+        // Arrange + Act
+        var statusCode = await _program.Run(new[]
         {
             "--fail"
         });
 
         // Assert
+        _testOutputHelper.WriteLine(_output.ToString());
+        _testOutputHelper.WriteLine(_errorOutput.ToString());
         Assert.Equal(-1, statusCode);
+    }
+
+    [Fact]
+    public async Task ShouldSupportParallelism()
+    {
+        // Arrange
+        var expected = $"{_dicomFile.FullName}{Environment.NewLine}";
+
+        // Act
+        var statusCode = await _program.Run(new[]
+        {
+            _dicomFile.FullName,
+            "--parallelism", "4"
+        });
+
+        // Assert
+        _testOutputHelper.WriteLine(_output.ToString());
+        _testOutputHelper.WriteLine(_errorOutput.ToString());
+        Assert.Equal(expected, _output.ToString());
+        Assert.Equal(string.Empty, _errorOutput.ToString());
+        Assert.Equal(0, statusCode);
+    }
+
+    [Fact]
+    public async Task ShouldSupportBlankingRectangles()
+    {
+        // Arrange
+        var expected = $"{_dicomFile.FullName}{Environment.NewLine}";
+
+        // Act
+        var statusCode = await _program.Run(new[]
+        {
+            _dicomFile.FullName,
+            "--blank-rectangle", "(25,25)->(50,50)"
+        });
+
+        // Assert
+        _testOutputHelper.WriteLine(_output.ToString());
+        _testOutputHelper.WriteLine(_errorOutput.ToString());
+        Assert.Equal(expected, _output.ToString());
+        Assert.Equal(string.Empty, _errorOutput.ToString());
+        Assert.Equal(0, statusCode);
     }
 }
