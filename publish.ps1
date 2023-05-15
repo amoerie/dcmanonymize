@@ -8,7 +8,7 @@ $version = $csproj.Project.PropertyGroup.Version
 
 Write-Host "Packing version $version"
 
-dotnet pack $csprojPath --configuration Release
+dotnet pack $csprojPath --configuration Release --output ./DcmAnonymize/bin/Release
 
 $nupkgFile = Resolve-Path (Join-Path "$projectPath/bin/Release" "$projectName.$version.nupkg")
 

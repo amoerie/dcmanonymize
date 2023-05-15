@@ -12,13 +12,13 @@ public class TestsForDcmAnonymize : IAsyncLifetime
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    private StringBuilder _output;
-    private StringBuilder _errorOutput;
-    private StringWriter _outputWriter;
-    private StringWriter _errorOutputWriter;
-    private TextReader _inputReader;
-    private FileInfo _dicomFile;
-    private Program _program;
+    private StringBuilder _output = default!;
+    private StringBuilder _errorOutput = default!;
+    private StringWriter _outputWriter = default!;
+    private StringWriter _errorOutputWriter = default!;
+    private TextReader _inputReader = default!;
+    private FileInfo _dicomFile = default!;
+    private Program _program = default!;
 
     public TestsForDcmAnonymize(ITestOutputHelper testOutputHelper)
     {
