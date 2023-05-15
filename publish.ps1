@@ -15,4 +15,4 @@ $nupkgFile = Resolve-Path (Join-Path "$projectPath/bin/Release" "$projectName.$v
 Write-Host "Publishing NuGet package file"
 
 # API key is presumed to be preconfigured
-nuget push $nupkgFile -skipduplicate -source nuget.org
+nuget push $nupkgFile -skipduplicate -source nuget

@@ -12,6 +12,7 @@
     <RepositoryUrl>https://github.com/amoerie/DcmAnonymize</RepositoryUrl>
     <Authors>Alexander Moerman</Authors>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>Embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
