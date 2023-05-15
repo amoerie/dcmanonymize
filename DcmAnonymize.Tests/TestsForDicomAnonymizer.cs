@@ -532,7 +532,6 @@ public class TestsForDicomAnonymizer
         await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet, options);
 
         // Assert
-        sampleDicomFile.Save(@"C:\Users\alexa\Downloads\out\us-multiframe.dcm");
         dicomDataSet.Validate();
         var dicomImage = new DicomImage(dicomDataSet);
         for (var frame = 0; frame < dicomImage.NumberOfFrames; frame++)
