@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommandLine;
+using DcmAnonymize.Blanking;
+using DcmAnonymize.Imaging;
 using DcmAnonymize.Instance;
 using DcmAnonymize.Names;
 using DcmAnonymize.Order;
@@ -13,6 +15,7 @@ using DcmAnonymize.Recursive;
 using DcmAnonymize.Series;
 using DcmAnonymize.Study;
 using FellowOakDicom;
+using FellowOakDicom.Imaging.NativeCodec;
 
 namespace DcmAnonymize;
 
@@ -28,6 +31,9 @@ public static class Program
 
         [Option('p', "parallelism", Default = 8, HelpText = "Process this many files in parallel")]
         public int Parallelism { get; set; }
+        
+        [Option("blank-rectangle", HelpText = "One or more rectangular regions to blank in the pixel data. Provide values in the shape (x1,y1)->(x2,y2), e.g. (0,0)->(10,10)", Required = false)]
+        public IEnumerable<string>? RectanglesToBlank { get; set; }
     }
     
     // ReSharper restore UnusedAutoPropertyAccessor.Global
@@ -36,6 +42,15 @@ public static class Program
 
     public static async Task<int> Main(string[] args)
     {
+        // Configure Fellow Oak DICOM
+        new DicomSetupBuilder()
+            .RegisterServices(s =>
+            {
+                s.AddImageManager<ImageSharpImageManager>();
+                s.AddTranscoderManager<NativeTranscoderManager>();
+            })
+            .Build();
+        
         switch (Parser.Default.ParseArguments<Options>(args))
         {
             case Parsed<Options> parsed:
@@ -70,7 +85,7 @@ public static class Program
                     yield return new FileInfo(file);
             }
         }
-
+        
         var files = options.Files != null && options.Files.Any()
             ? options.Files.Select(f => new FileInfo(f))
             : ReadFilesFromConsole();
@@ -84,30 +99,32 @@ public static class Program
             new SeriesAnonymizer(),
             new InstanceAnonymizer(),
             new RecursiveAnonymizer(dummyValueFiller),
-            new OrderAnonymizer()
+            new OrderAnonymizer(),
+            new BlankingAnonymizer()
         );
+        var anonymizationOptions = AnonymizationOptions.Parse(options.RectanglesToBlank);
 
         await Task.WhenAll(
             Partitioner
                 .Create(files)
                 .GetPartitions(parallelism)
                 .AsParallel()
-                .Select(partition => AnonymizeFilesAsync(partition, anonymizer))
+                .Select(partition => AnonymizeFilesAsync(partition, anonymizer, anonymizationOptions))
         );
     }
 
-    private static async Task AnonymizeFilesAsync(IEnumerator<FileInfo> files, DicomAnonymizer anonymizer)
+    private static async Task AnonymizeFilesAsync(IEnumerator<FileInfo> files, DicomAnonymizer anonymizer, AnonymizationOptions options)
     {
         using (files)
         {
             while (files.MoveNext())
             {
-                await AnonymizeFileAsync(files.Current, anonymizer).ConfigureAwait(false);
+                await AnonymizeFileAsync(files.Current, anonymizer, options).ConfigureAwait(false);
             }
         }
     }
 
-    private static async Task AnonymizeFileAsync(FileInfo file, DicomAnonymizer anonymizer)
+    private static async Task AnonymizeFileAsync(FileInfo file, DicomAnonymizer anonymizer, AnonymizationOptions options)
     {
         DicomFile dicomFile;
         using (var inputFileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096))
@@ -131,7 +148,7 @@ public static class Program
 
         try
         {
-            await anonymizer.AnonymizeAsync(dicomFile);
+            await anonymizer.AnonymizeAsync(dicomFile, options);
         }
         catch (Exception e)
         {
