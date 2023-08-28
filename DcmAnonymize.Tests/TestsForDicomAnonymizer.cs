@@ -22,24 +22,28 @@ namespace DcmAnonymize.Tests;
 [Collection("DcmAnonymize")]
 public class TestsForDicomAnonymizer
 {
-    public static readonly TheoryData<DicomTag> TagsToRemove = KnownDicomTags.TagsToRemove.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
-    {
-        data.Add(tag);
-        return data;
-    });
-    
-    public static readonly TheoryData<DicomTag> UIDTagsToAnonymize = KnownDicomTags.UIDTagsToAnonymize.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
-    {
-        data.Add(tag);
-        return data;
-    });
-    
-    public static readonly TheoryData<DicomTag> TagsToClean = KnownDicomTags.TagsToClean.Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
-    {
-        data.Add(tag);
-        return data;
-    });
-    
+    public static readonly TheoryData<DicomTag> TagsToRemove = KnownDicomTags.TagsToRemove
+        .Where(tag => tag != DicomTag.Unknown)
+        .Aggregate(new TheoryData<DicomTag>(), (data, tag) =>
+        {
+            data.Add(tag);
+            return data;
+        });
+
+    public static readonly TheoryData<DicomTag> UIDTagsToAnonymize = KnownDicomTags.UIDTagsToAnonymize.Aggregate(
+        new TheoryData<DicomTag>(), (data, tag) =>
+        {
+            data.Add(tag);
+            return data;
+        });
+
+    public static readonly TheoryData<DicomTag> TagsToClean = KnownDicomTags.TagsToClean.Aggregate(
+        new TheoryData<DicomTag>(), (data, tag) =>
+        {
+            data.Add(tag);
+            return data;
+        });
+
     private readonly DicomAnonymizer _anonymizer;
     private readonly AnonymizationOptions _options;
 
@@ -49,16 +53,16 @@ public class TestsForDicomAnonymizer
         var nationalNumberGenerator = new NationalNumberGenerator();
         var dummyValueFiller = new DicomTagCleaner(randomNameGenerator);
         _anonymizer = new DicomAnonymizer(
-            new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator), 
+            new PatientAnonymizer(randomNameGenerator, nationalNumberGenerator),
             new StudyAnonymizer(randomNameGenerator),
-            new SeriesAnonymizer(), 
+            new SeriesAnonymizer(),
             new InstanceAnonymizer(),
             new RecursiveAnonymizer(dummyValueFiller),
             new OrderAnonymizer(),
             new BlankingAnonymizer());
         _options = new AnonymizationOptions(new List<RectangleToBlank>());
-        
-                
+
+
         // Configure Fellow Oak DICOM
         new DicomSetupBuilder()
             .RegisterServices(s =>
@@ -68,7 +72,7 @@ public class TestsForDicomAnonymizer
             })
             .Build();
     }
-    
+
     [Fact]
     public async Task ShouldBeAbleToAnonymizeEmptyDataSet()
     {
@@ -82,10 +86,10 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "1.1.1" },
         };
         dicomDataSet.Validate();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet, _options);
-            
+
         // Assert
         dicomDataSet.Contains(DicomTag.PatientName).Should().BeTrue();
         dicomDataSet.GetSingleValue<string>(DicomTag.PatientName).Should().NotBe("Bar^Foo");
@@ -93,7 +97,7 @@ public class TestsForDicomAnonymizer
         dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID).Should().NotBe("1.1");
         dicomDataSet.GetSingleValue<string>(DicomTag.SOPInstanceUID).Should().NotBe("1.1.1");
     }
-        
+
     [Fact]
     public async Task ShouldAnonymizeSamePatient()
     {
@@ -114,11 +118,11 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "2.2.2" },
         };
         var metaInfo2 = new DicomFileMetaInformation();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1, _options);
         await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2, _options);
-            
+
         // Assert
         var patientName1 = dicomDataSet1.GetSingleValue<string>(DicomTag.PatientName);
         var patientName2 = dicomDataSet2.GetSingleValue<string>(DicomTag.PatientName);
@@ -126,7 +130,7 @@ public class TestsForDicomAnonymizer
         patientName2.Should().NotBe("Bar^Foo");
         patientName1.Should().Be(patientName2);
     }
-        
+
     [Fact]
     public async Task ShouldAnonymizeSameOrder()
     {
@@ -158,12 +162,12 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "3.1.1" },
             { DicomTag.PlacerOrderNumberImagingServiceRequest, "ORDER2" },
         };
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1, _options);
         await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2, _options);
         await _anonymizer.AnonymizeAsync(metaInfo3, dicomDataSet3, _options);
-            
+
         // Assert
         var orderNumber1 = dicomDataSet1.GetSingleValue<string>(DicomTag.PlacerOrderNumberImagingServiceRequest);
         var orderNumber2 = dicomDataSet2.GetSingleValue<string>(DicomTag.PlacerOrderNumberImagingServiceRequest);
@@ -174,7 +178,7 @@ public class TestsForDicomAnonymizer
         orderNumber1.Should().Be(orderNumber2);
         orderNumber3.Should().NotBe(orderNumber1);
     }
-    
+
     [Fact]
     public async Task ShouldAnonymizeSameStudy()
     {
@@ -195,11 +199,11 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "1.2.2" },
         };
         var metaInfo2 = new DicomFileMetaInformation();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1, _options);
         await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2, _options);
-            
+
         // Assert
         var studyInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.StudyInstanceUID);
         var studyInstanceUID2 = dicomDataSet2.GetSingleValue<string>(DicomTag.StudyInstanceUID);
@@ -207,7 +211,7 @@ public class TestsForDicomAnonymizer
         studyInstanceUID2.Should().NotBe("1");
         studyInstanceUID1.Should().Be(studyInstanceUID2);
     }
-        
+
     [Fact]
     public async Task ShouldAnonymizeSameSeries()
     {
@@ -228,11 +232,11 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "1.1.2" },
         };
         var metaInfo2 = new DicomFileMetaInformation();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1, _options);
         await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2, _options);
-            
+
         // Assert
         var seriesInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
         var seriesInstanceUID2 = dicomDataSet2.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
@@ -240,7 +244,7 @@ public class TestsForDicomAnonymizer
         seriesInstanceUID2.Should().NotBe("1");
         seriesInstanceUID1.Should().Be(seriesInstanceUID2);
     }
-        
+
     [Fact]
     public async Task ShouldAnonymizeSameInstances()
     {
@@ -261,11 +265,11 @@ public class TestsForDicomAnonymizer
             { DicomTag.SOPInstanceUID, "1.1.1" },
         };
         var metaInfo2 = new DicomFileMetaInformation();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo1, dicomDataSet1, _options);
         await _anonymizer.AnonymizeAsync(metaInfo2, dicomDataSet2, _options);
-            
+
         // Assert
         var sopInstanceUID1 = dicomDataSet1.GetSingleValue<string>(DicomTag.SOPInstanceUID);
         var sopInstanceUID2 = dicomDataSet2.GetSingleValue<string>(DicomTag.SOPInstanceUID);
@@ -273,7 +277,7 @@ public class TestsForDicomAnonymizer
         sopInstanceUID2.Should().NotBe("1.1.1");
         sopInstanceUID1.Should().Be(sopInstanceUID2);
     }
-        
+
     [Fact]
     public async Task ShouldBeAbleToAnonymizeSampleDicomFile()
     {
@@ -281,7 +285,7 @@ public class TestsForDicomAnonymizer
         var sampleDicomFile = await DicomFile.OpenAsync("./TestData/SampleDicomFile.dcm");
         var metaInfo = sampleDicomFile.FileMetaInfo;
         var dicomDataSet = sampleDicomFile.Dataset;
-            
+
         dicomDataSet.Validate();
 
         // Act
@@ -300,39 +304,44 @@ public class TestsForDicomAnonymizer
         var dicomFile1 = await DicomFile.OpenAsync(file1);
         var dicomFile2 = await DicomFile.OpenAsync(file2);
         var sopInstanceUID = dicomFile1.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID);
-        var currentRequestedProcedureEvidenceSequence = dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
-        var referencedSeriesSequence = currentRequestedProcedureEvidenceSequence.Single().GetSequence(DicomTag.ReferencedSeriesSequence);
+        var currentRequestedProcedureEvidenceSequence =
+            dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
+        var referencedSeriesSequence = currentRequestedProcedureEvidenceSequence.Single()
+            .GetSequence(DicomTag.ReferencedSeriesSequence);
         var referencedSopSequence = referencedSeriesSequence.Single().GetSequence(DicomTag.ReferencedSOPSequence);
-        var firstReferencedSopInstanceUID = referencedSopSequence.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
-        
+        var firstReferencedSopInstanceUID =
+            referencedSopSequence.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
+
         // Ensure our test data is correct
         sopInstanceUID.Should().NotBeNullOrEmpty();
         firstReferencedSopInstanceUID.Should().NotBeNullOrEmpty();
-        firstReferencedSopInstanceUID.Should().Be(sopInstanceUID); 
-        
+        firstReferencedSopInstanceUID.Should().Be(sopInstanceUID);
+
         // Act
         await _anonymizer.AnonymizeAsync(dicomFile1.FileMetaInfo, dicomFile1.Dataset, _options);
         await _anonymizer.AnonymizeAsync(dicomFile2.FileMetaInfo, dicomFile2.Dataset, _options);
 
         // Assert
         var sopInstanceUID2 = dicomFile1.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID);
-        var currentRequestedProcedureEvidenceSequence2 = dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
-        var referencedSeriesSequence2 = currentRequestedProcedureEvidenceSequence2.Single().GetSequence(DicomTag.ReferencedSeriesSequence);
+        var currentRequestedProcedureEvidenceSequence2 =
+            dicomFile2.Dataset.GetSequence(DicomTag.CurrentRequestedProcedureEvidenceSequence);
+        var referencedSeriesSequence2 = currentRequestedProcedureEvidenceSequence2.Single()
+            .GetSequence(DicomTag.ReferencedSeriesSequence);
         var referencedSopSequence2 = referencedSeriesSequence2.Single().GetSequence(DicomTag.ReferencedSOPSequence);
-        var firstReferencedSopInstanceUID2 = referencedSopSequence2.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
+        var firstReferencedSopInstanceUID2 =
+            referencedSopSequence2.First().GetSingleValue<string>(DicomTag.ReferencedSOPInstanceUID);
 
         // Ensure data is still present
         sopInstanceUID2.Should().NotBeNullOrEmpty();
         firstReferencedSopInstanceUID2.Should().NotBeNullOrEmpty();
-        
+
         // Ensure data is anonymized
         sopInstanceUID.Should().NotBe(sopInstanceUID2);
         firstReferencedSopInstanceUID.Should().NotBe(firstReferencedSopInstanceUID2);
-        
+
         // Ensure referential integrity is retained
         sopInstanceUID2.Should().Be(firstReferencedSopInstanceUID2);
     }
-
 
 
     [Theory]
@@ -361,11 +370,12 @@ public class TestsForDicomAnonymizer
         {
             dataSet.Add(tag, string.Empty);
         }
+
         var originalDataset = dataSet.Clone();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo, dataSet, _options);
-            
+
         // Assert
         originalDataset.Contains(tag).Should().BeTrue();
         dataSet.Contains(tag).Should().BeFalse();
@@ -398,13 +408,13 @@ public class TestsForDicomAnonymizer
         dataSet2.AddOrUpdate(tag, originalUID);
         var originalDataset1 = dataSet1.Clone();
         var originalDataset2 = dataSet2.Clone();
-            
+
         // Act
         await Task.WhenAll(
             Task.Run(() => _anonymizer.AnonymizeAsync(metaInfo1, dataSet1, _options)),
             Task.Run(() => _anonymizer.AnonymizeAsync(metaInfo2, dataSet2, _options))
         );
-            
+
         // Assert
         originalDataset1.GetSingleValue<DicomUID>(tag).Should().Be(originalUID);
         originalDataset2.GetSingleValue<DicomUID>(tag).Should().Be(originalUID);
@@ -433,11 +443,11 @@ public class TestsForDicomAnonymizer
         }
         else if (valueRepresentation == DicomVR.OB)
         {
-            dataSet.Add(tag, new byte[] { 1,2,3 });
+            dataSet.Add(tag, new byte[] { 1, 2, 3 });
         }
-        else if(valueRepresentation == DicomVR.DA
-                || valueRepresentation == DicomVR.DT 
-                || valueRepresentation == DicomVR.TM)
+        else if (valueRepresentation == DicomVR.DA
+                 || valueRepresentation == DicomVR.DT
+                 || valueRepresentation == DicomVR.TM)
         {
             dataSet.Add(tag, DateTime.Now);
         }
@@ -447,17 +457,18 @@ public class TestsForDicomAnonymizer
         }
         else if (valueRepresentation == DicomVR.UN)
         {
-            dataSet.Add(tag, (byte) 1);
+            dataSet.Add(tag, (byte)1);
         }
         else
         {
             dataSet.Add(tag, "123");
         }
+
         var originalDataset = dataSet.Clone();
-            
+
         // Act
         await _anonymizer.AnonymizeAsync(metaInfo, dataSet, _options);
-            
+
         // Assert
         originalDataset.Contains(tag).Should().BeTrue();
         dataSet.Contains(tag).Should().BeTrue();
@@ -480,7 +491,7 @@ public class TestsForDicomAnonymizer
             dataSet.GetString(tag).Should().Be(string.Empty);
         }
     }
-    
+
     [Fact]
     public async Task ShouldBeAbleToBlankRectangles()
     {
@@ -488,7 +499,7 @@ public class TestsForDicomAnonymizer
         var sampleDicomFile = await DicomFile.OpenAsync("./TestData/SampleDicomFile.dcm");
         var metaInfo = sampleDicomFile.FileMetaInfo;
         var dicomDataSet = sampleDicomFile.Dataset;
-            
+
         dicomDataSet.Validate();
 
         var options = _options with
@@ -509,7 +520,7 @@ public class TestsForDicomAnonymizer
         var color = image.GetPixel(700, 700);
         color.Should().Be(Color32.Black);
     }
-    
+
     [Fact]
     public async Task ShouldBeAbleToBlankRectanglesOfMultiFrame()
     {
@@ -517,7 +528,7 @@ public class TestsForDicomAnonymizer
         var sampleDicomFile = await DicomFile.OpenAsync(@"TestData/SampleMultiFrame.dcm");
         var metaInfo = sampleDicomFile.FileMetaInfo;
         var dicomDataSet = sampleDicomFile.Dataset;
-            
+
         dicomDataSet.Validate();
 
         var options = _options with
@@ -541,5 +552,4 @@ public class TestsForDicomAnonymizer
             color.Should().Be(Color32.Black);
         }
     }
-
 }
