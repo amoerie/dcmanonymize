@@ -43,6 +43,14 @@ public class StudyAnonymizer
                     var anonymizedStudyInstanceUID = anonymizedUIDs.GetOrAdd(originalStudyInstanceUID, _ => DicomUIDGenerator.GenerateDerivedFromUUID());
                     anonymizedUIDs[anonymizedStudyInstanceUID.UID] = anonymizedStudyInstanceUID;
                     var accessionNumber = $"{originalModality}{DateTime.Now:yyyyMMddHHmm}{_counter++}";
+                    if (accessionNumber.Length > 16)
+                    {
+                        accessionNumber = $"{originalModality}{DateTime.Now:yyyyMMddHH}{_counter++}";
+                    }
+                    if (accessionNumber.Length > 16)
+                    {
+                        accessionNumber = $"{originalModality}{DateTime.Now:yyyyMMdd}{_counter++}";
+                    }
                     var requestingPhysician = _randomNameGenerator.GenerateRandomName();
                     var studyDateTime = DateTime.Now;
                     var studyId = accessionNumber;
