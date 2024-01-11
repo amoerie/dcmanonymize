@@ -552,4 +552,41 @@ public class TestsForDicomAnonymizer
             color.Should().Be(Color32.Black);
         }
     }
+
+    [Fact]
+    public async Task ShouldBeAbleToAnonymizeMoreThan1000Studies()
+    {
+        // Arrange
+        var randomNameGenerator = new RandomNameGenerator();
+        for (int i = 0; i < 10_000; i++)
+        {
+            var patientName = randomNameGenerator.GenerateRandomName();
+            var originalStudyInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+            var originalAccessionNumber = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 16);
+            var originalSeriesInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+            var originalSopInstanceUID = DicomUIDGenerator.GenerateDerivedFromUUID().UID;
+            var dicomDataSet = new DicomDataset
+            {
+                new DicomPersonName(DicomTag.PatientName, patientName.LastName, patientName.FirstName),
+                { DicomTag.AccessionNumber, originalAccessionNumber },
+                { DicomTag.StudyInstanceUID, originalStudyInstanceUID },
+                { DicomTag.SeriesInstanceUID, originalSeriesInstanceUID },
+                { DicomTag.SOPInstanceUID, originalSopInstanceUID },
+            };
+            var metaInfo = new DicomFileMetaInformation();
+
+            // Act
+            await _anonymizer.AnonymizeAsync(metaInfo, dicomDataSet, _options);
+
+            // Assert
+            var anonymizedStudyInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.StudyInstanceUID);
+            var anonymizedSeriesInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
+            var anonymizedSopInstanceUID = dicomDataSet.GetSingleValue<string>(DicomTag.SOPInstanceUID);
+            var anonymizedAccessionNumber = dicomDataSet.GetSingleValue<string>(DicomTag.AccessionNumber);
+            anonymizedStudyInstanceUID.Should().NotBe(originalStudyInstanceUID);
+            anonymizedSeriesInstanceUID.Should().NotBe(originalSeriesInstanceUID);
+            anonymizedSopInstanceUID.Should().NotBe(originalSopInstanceUID);
+            anonymizedAccessionNumber.Should().NotBe(originalAccessionNumber);
+        }
+    }
 }
