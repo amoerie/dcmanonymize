@@ -24,8 +24,8 @@
     <PackageReference Include="fo-dicom" Version="5.2.6" />
     <PackageReference Include="fo-dicom.Codecs" Version="5.16.7" />
     <PackageReference Include="KeyedSemaphores" Version="6.1.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="4.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
